@@ -9,7 +9,7 @@ module.exports = {
   },
   watchOptions: {
     aggregateTimeout: 1000,
-    poll: 2000,
+    poll: 1000,
   },
   devServer: {
     static: './public',

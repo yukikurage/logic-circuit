@@ -9,7 +9,6 @@
 /.psa*
 /.spago
 
-/.vscode
 /purescript-dependency-graph
 /public/index.js
 /public/style.css
