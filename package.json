@@ -1,0 +1,39 @@
+{
+  "devDependencies": {
+    "@tailwindcss/jit": "^0.1.10",
+    "purescript": "^0.14.4",
+    "spago": "^0.20.3",
+    "tailwindcss": "^2.2.16",
+    "webpack": "^5.58.1",
+    "webpack-cli": "^4.9.0",
+    "webpack-dev-server": "^4.3.1"
+  },
+  "name": "logic-circuit",
+  "version": "1.0.0",
+  "main": "public/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "clean": "rm -r output .lock .cache",
+    "test": "npx spago test",
+    "deploy:spago": "npx spago bundle-app --main Main --to './public/index.js'",
+    "deploy:tailwind": "npx tailwindcss -i ./src/tailwind.css -o ./public/style.css",
+    "watch:tailwind": "npx tailwindcss -i ./src/tailwind.css -o ./public/style.css -w",
+    "watch:spago": "npx spago build --watch",
+    "watch:webpack-server": "npx webpack-dev-server",
+    "watch": "npx concurrently \"npm run watch:tailwind\" \"npm run watch:spago\" \"npm run watch:webpack-server\"",
+    "deploy": "npm run deploy:tailwind && npm run deploy:spago"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/yukikurage/logic-circuit.git"
+  },
+  "author": "yukikurage",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yukikurage/logic-circuit/issues"
+  },
+  "homepage": "https://github.com/yukikurage/logic-circuit#readme",
+  "description": ""
+}
