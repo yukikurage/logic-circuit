@@ -1,4 +1,4 @@
-module LogicWeb.Formula where
+module LogicWeb.PropositionalLogic.Formula where
 
 import Prelude
 
