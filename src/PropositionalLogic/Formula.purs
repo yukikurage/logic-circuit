@@ -40,7 +40,7 @@ substitution (SingleConnect c f) vs = SingleConnect c (substitution f vs)
 substitution (Connect c f0 f1) vs = Connect c (substitution f0 vs) (substitution f1 vs)
 
 -- | 論理式を計算
-compute :: Formula -> Maybe Boolean
-compute (Var _) = Nothing
-compute (SingleConnect c f) = c.value <$> compute f
-compute (Connect c f0 f1) = c.value <$> compute f0 <*> compute f1
+compute :: Formula -> Map.Map Variable Boolean -> Maybe Boolean
+compute (Var v) vs = Map.lookup v vs
+compute (SingleConnect c f) vs = c.value <$> compute f vs
+compute (Connect c f0 f1) vs = c.value <$> compute f0 vs <*> compute f1 vs
