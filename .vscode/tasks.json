@@ -3,7 +3,7 @@
 	"tasks": [
 		{
 			"type": "npm",
-			"script": "run build:spago",
+			"script": "build:spago",
 			"group": {
 				"kind": "build",
 				"isDefault": true
