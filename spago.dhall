@@ -15,11 +15,16 @@ to generate this file without the comments in this block.
   [ "arrays"
   , "console"
   , "effect"
+  , "either"
+  , "foldable-traversable"
   , "integers"
   , "lists"
+  , "maybe"
   , "ordered-collections"
   , "prelude"
   , "psci-support"
+  , "record"
+  , "strings"
   , "tuples"
   ]
 , packages = ./packages.dhall
