@@ -2,7 +2,6 @@ module LogicWeb.PropositionalLogic.Formula.Primitive where
 
 import Prelude
 
-import Data.Array (all, elem, find)
 import Data.Enum (enumFromTo)
 import Data.HeytingAlgebra (implies)
 import Data.Maybe (Maybe(..))
@@ -41,7 +40,15 @@ primImplication =
   { symbol: "⇒"
   , value: implies
   , priority: 40
-  , associative: Nothing
+  , associative: Just F.Right
+  }
+
+primImplication2 :: F.BinaryOperator
+primImplication2 =
+  { symbol: "=>"
+  , value: implies
+  , priority: 40
+  , associative: Just F.Right
   }
 
 primEq :: F.BinaryOperator
@@ -52,21 +59,14 @@ primEq =
   , associative: Just F.Left
   }
 
-isVariable :: String -> Boolean
-isVariable = String.toCodePointArray
-  >>> all
-    ( flip elem (map codePointFromChar
+primEnv :: Environment
+primEnv =
+  { variables: map ((\x -> {symbol : x}) <<< String.singleton <<< codePointFromChar)
       $ enumFromTo 'a' 'z'
       <> enumFromTo 'A' 'Z'
       <> enumFromTo 'α' 'ω'
-      <> (enumFromTo '0' '9' :: Array Char)
-      )
-    )
-
-primEnv :: Environment
-primEnv =
-  { variables: \str -> if isVariable str && String.length str > 0 then Just {symbol : str} else Nothing
-  , binaryOperators: \str -> find ((_.symbol) >>> (_ == str)) $ [primAnd, primEq, primImplication, primOr]
-  , monadicOperators: \str -> find ((_.symbol) >>> (_ == str)) $ [primNot]
+      <> enumFromTo '0' '9'
+  , binaryOperators: [primAnd, primEq, primImplication, primImplication2, primOr]
+  , monadicOperators: [primNot]
   , brackets: {left: "(", right: ")"}
   }
