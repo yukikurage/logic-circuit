@@ -19,8 +19,8 @@ primNot =
   , associative: Just F.Right
   }
 
-primNot_ :: F.MonadicOperator
-primNot_ =
+primNot2 :: F.MonadicOperator
+primNot2 =
   { symbol: "!"
   , value: not
   , priority: 100
@@ -35,9 +35,17 @@ primAnd =
   , associative: Just F.Left
   }
 
-primAnd_ :: F.BinaryOperator
-primAnd_ =
+primAnd2 :: F.BinaryOperator
+primAnd2 =
   { symbol: "*"
+  , value: (&&)
+  , priority: 80
+  , associative: Just F.Left
+  }
+
+primAnd3 :: F.BinaryOperator
+primAnd3 =
+  { symbol: "&"
   , value: (&&)
   , priority: 80
   , associative: Just F.Left
@@ -51,9 +59,17 @@ primOr =
   , associative: Just F.Left
   }
 
-primOr_ :: F.BinaryOperator
-primOr_ =
+primOr2 :: F.BinaryOperator
+primOr2 =
   { symbol: "+"
+  , value: (||)
+  , priority: 60
+  , associative: Just F.Left
+  }
+
+primOr3 :: F.BinaryOperator
+primOr3 =
+  { symbol: "|"
   , value: (||)
   , priority: 60
   , associative: Just F.Left
@@ -67,8 +83,8 @@ primImplication =
   , associative: Just F.Right
   }
 
-primImplication_ :: F.BinaryOperator
-primImplication_ =
+primImplication2 :: F.BinaryOperator
+primImplication2 =
   { symbol: "=>"
   , value: implies
   , priority: 40
@@ -83,6 +99,22 @@ primEq =
   , associative: Just F.Left
   }
 
+primEq2 :: F.BinaryOperator
+primEq2 =
+  { symbol : "<=>"
+  , value: eq
+  , priority: 20
+  , associative: Just F.Left
+  }
+
+primEq4 :: F.BinaryOperator
+primEq4 =
+  { symbol : "⟺"
+  , value: eq
+  , priority: 20
+  , associative: Just F.Left
+  }
+
 primEnv :: Environment
 primEnv =
   { variables: map (String.singleton <<< codePointFromChar)
@@ -90,8 +122,8 @@ primEnv =
       <> enumFromTo 'A' 'Z'
       <> enumFromTo 'α' 'ω'
       <> enumFromTo '0' '9'
-  , binaryOperators: [primAnd, primAnd_, primEq, primImplication, primImplication_, primOr, primOr_]
-  , monadicOperators: [primNot, primNot_]
+  , binaryOperators: [primAnd, primAnd2, primAnd3, primEq, primEq2, primEq4, primImplication, primImplication2, primOr, primOr2, primOr3]
+  , monadicOperators: [primNot, primNot2]
   , brackets:
     { left: "("
     , right: ")"
