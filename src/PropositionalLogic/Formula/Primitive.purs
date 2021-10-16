@@ -19,9 +19,25 @@ primNot =
   , associative: Just F.Right
   }
 
+primNot_ :: F.MonadicOperator
+primNot_ =
+  { symbol: "!"
+  , value: not
+  , priority: 100
+  , associative: Just F.Right
+  }
+
 primAnd :: F.BinaryOperator
 primAnd =
   { symbol: "∧"
+  , value: (&&)
+  , priority: 80
+  , associative: Just F.Left
+  }
+
+primAnd_ :: F.BinaryOperator
+primAnd_ =
+  { symbol: "*"
   , value: (&&)
   , priority: 80
   , associative: Just F.Left
@@ -35,6 +51,14 @@ primOr =
   , associative: Just F.Left
   }
 
+primOr_ :: F.BinaryOperator
+primOr_ =
+  { symbol: "+"
+  , value: (||)
+  , priority: 60
+  , associative: Just F.Left
+  }
+
 primImplication :: F.BinaryOperator
 primImplication =
   { symbol: "⇒"
@@ -43,8 +67,8 @@ primImplication =
   , associative: Just F.Right
   }
 
-primImplication2 :: F.BinaryOperator
-primImplication2 =
+primImplication_ :: F.BinaryOperator
+primImplication_ =
   { symbol: "=>"
   , value: implies
   , priority: 40
@@ -66,8 +90,8 @@ primEnv =
       <> enumFromTo 'A' 'Z'
       <> enumFromTo 'α' 'ω'
       <> enumFromTo '0' '9'
-  , binaryOperators: [primAnd, primEq, primImplication, primImplication2, primOr]
-  , monadicOperators: [primNot]
+  , binaryOperators: [primAnd, primAnd_, primEq, primImplication, primImplication_, primOr, primOr_]
+  , monadicOperators: [primNot, primNot_]
   , brackets:
     { left: "("
     , right: ")"

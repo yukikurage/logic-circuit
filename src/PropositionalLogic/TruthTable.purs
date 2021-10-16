@@ -4,12 +4,14 @@ import Prelude
 
 import Data.Array (findIndex, index, length, replicate)
 import Data.Maybe (Maybe)
-import Data.String (joinWith)
+import Data.String (codePointFromChar, joinWith)
+import Data.String as String
 import Data.Traversable (traverse)
 import Data.Unfoldable (replicateA)
 
 type TruthTable =
   { variables :: Array String
+  , output :: String
   , table :: (String -> Maybe Boolean) -> Maybe Boolean
   }
 
@@ -21,8 +23,9 @@ showTruthTable t =
   <> "\n"
   <> c) <$> content
   where
-  header = joinWith " | " t.variables <> " ||"
-  line = joinWith "-|-" (replicate (length t.variables) "-") <> "-||---"
+  header = joinWith " | " t.variables <> " || " <> t.output
+  line = joinWith "-|-" (replicate (length t.variables) "-") <> "-||-"
+    <> String.fromCodePointArray (replicate (String.length $ t.output) $ codePointFromChar '-') <> "-"
   showBoolean true = "1"
   showBoolean false = "0"
   showContentLine xs =
