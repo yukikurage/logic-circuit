@@ -2,11 +2,12 @@ module Test.Main where
 
 import Prelude
 
-import Data.Either (fromRight)
+import Data.Either (Either)
+import Data.Maybe (Maybe)
 import Effect (Effect)
 import Effect.Class.Console (log)
-import LogicWeb.PropositionalLogic (formulaToTruthTable)
-import LogicWeb.PropositionalLogic.Formula.Parser (parse)
+import LogicWeb.PropositionalLogic (toTruthTable)
+import LogicWeb.PropositionalLogic.Formula.Parser (ParseError, parse)
 import LogicWeb.PropositionalLogic.Formula.Primitive (primEnv)
 import LogicWeb.PropositionalLogic.TruthTable (showTruthTable)
 
@@ -15,4 +16,5 @@ main = do
   log "🍝"
   log "You should add some tests."
 
-parseAndShowTruthTable str = (showTruthTable <<< formulaToTruthTable) <$> parse primEnv str
+parseAndShowTruthTable :: String -> Either ParseError (Maybe String)
+parseAndShowTruthTable str = (showTruthTable <<< toTruthTable) <$> parse primEnv str
