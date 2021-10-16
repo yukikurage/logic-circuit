@@ -2,13 +2,11 @@ module LogicWeb.PropositionalLogic.Formula where
 
 import Prelude
 
+import Data.Array (nub)
 import Data.Maybe (Maybe, fromMaybe)
-import Data.Set as Set
 
 -- | 命題変数
-type Variable =
-  { symbol :: String
-  }
+type Variable = String
 
 data Associative = Left | Right
 
@@ -36,10 +34,10 @@ data Formula =
   BinaryOperate BinaryOperator Formula Formula
 
 -- | 論理式から命題変数を取り出す
-variables :: Formula -> Set.Set Variable
-variables (Var v) = Set.singleton v
-variables (MonadicOperate _ f) = variables f
-variables (BinaryOperate _ f0 f1) = variables f0 <> variables f1
+variables :: Formula -> Array Variable
+variables (Var v) = [v]
+variables (MonadicOperate _ f) = nub $ variables f
+variables (BinaryOperate _ f0 f1) = nub $ variables f0 <> variables f1
 
 -- | 論理式を論理式へ代入
 substitution :: Formula -> (Variable -> Maybe Formula) -> Formula
@@ -54,6 +52,6 @@ compute (MonadicOperate c f) vs = c.value <$> compute f vs
 compute (BinaryOperate c f0 f1) vs = c.value <$> compute f0 vs <*> compute f1 vs
 
 instance Show Formula where
-  show (Var v) = v.symbol
+  show (Var v) = v
   show (MonadicOperate c f) = "(" <> c.symbol <> show f <> ")"
   show (BinaryOperate c f0 f1) = "(" <> show f0 <> c.symbol <> show f1 <> ")"

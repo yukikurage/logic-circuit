@@ -61,7 +61,7 @@ primEq =
 
 primEnv :: Environment
 primEnv =
-  { variables: map ((\x -> {symbol : x}) <<< String.singleton <<< codePointFromChar)
+  { variables: map (String.singleton <<< codePointFromChar)
       $ enumFromTo 'a' 'z'
       <> enumFromTo 'A' 'Z'
       <> enumFromTo 'α' 'ω'

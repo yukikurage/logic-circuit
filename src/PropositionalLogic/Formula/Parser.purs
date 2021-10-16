@@ -43,7 +43,7 @@ symbol :: Environment -> String -> Either ParseError Symbols
 symbol env str = note (BadRequest NoSuchToken) $ head $ catMaybes
   [ if env.brackets.left == str then Just LeftBracket else Nothing
   , if env.brackets.right == str then Just RightBracket else Nothing
-  , Variable <$> find (\x -> x.symbol == str) env.variables
+  , Variable <$> find (_ == str) env.variables
   , MonadicOperator <$> find (\x -> x.symbol == str) env.monadicOperators
   , BinaryOperator <$> find (\x -> x.symbol == str) env.binaryOperators]
 
