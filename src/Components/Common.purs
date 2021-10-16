@@ -12,6 +12,5 @@ import Web.HTML.Common (ClassName(..))
 css :: forall r i. String -> IProp ( class :: String | r) i
 css str = class_ $ ClassName str
 
-makeText :: forall w i. String -> HH.HTML w i
-makeText str = HH.div_
-  $ intercalate (singleton HH.br_) $ map (HH.text >>> singleton) $ String.split (String.Pattern "\n") str
+makeText :: forall w i. String -> Array (HH.HTML w i)
+makeText str = intercalate (singleton HH.br_) $ map (HH.text >>> singleton) $ String.split (String.Pattern "\n") str

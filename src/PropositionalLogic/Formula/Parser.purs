@@ -2,6 +2,7 @@ module LogicWeb.PropositionalLogic.Formula.Parser (parse, ParseError, Environmen
 
 import Prelude
 
+import Control.Alt ((<|>))
 import Data.Array (catMaybes, concat, cons, find, head, length, snoc, span, tail, uncons, (..), (:))
 import Data.Either (Either(..), hush, note)
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -9,7 +10,6 @@ import Data.String as String
 import Data.Traversable (sequence)
 import LogicWeb.PropositionalLogic.Formula (Associative, BinaryOperator, Formula(..), MonadicOperator, Variable)
 import LogicWeb.PropositionalLogic.Formula as F
-import Control.Alt ((<|>))
 
 type Environment =
   { variables :: Array Variable
@@ -64,7 +64,7 @@ interpretation s = loop s []
         loop token.tail
           $ BinaryOperate op stack1.head stack0.head : stack1.tail
       Variable v -> loop token.tail $ Var v : stack
-      _ -> Left (BadRequest Inconsistencies)
+      _ -> Left $ BadRequest Inconsistencies
     Nothing -> note (BadRequest Inconsistencies)
       $ if length stack == 1 then head stack else Nothing
 
@@ -78,11 +78,11 @@ shuntingYard symbols = loop symbols [] []
       LeftBracket -> loop token.tail output $ LeftBracket : stack
       RightBracket ->
         loop token.tail (output <> extract.init)
-        $ fromMaybe [] $ tail extract.rest
+        $ fromMaybe [] $ tail $ extract.rest
         where
           frag = case _ of
-            LeftBracket -> true
-            _ -> false
+            LeftBracket -> false
+            _ -> true
           extract = span frag stack
       Variable v -> loop token.tail (output `snoc` Variable v) stack
       where

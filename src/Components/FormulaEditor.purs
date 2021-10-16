@@ -21,14 +21,18 @@ component = Hooks.component \_ _ -> Hooks.do
   inputValue /\ inputValueId <- Hooks.useState ""
   truthTable /\ truthTableId <- Hooks.useState ""
 
-  Hooks.pure $ HH.div [css "m-5"] $
-    [ HH.input
-      [ HP.value inputValue
-      , HE.onValueInput \s -> do
-        Hooks.put inputValueId s
-        case (showTruthTable <<< toTruthTable) <$> parse primEnv s of
-          Right (Just x) -> Hooks.put truthTableId x
-          _ -> pure unit
+  Hooks.pure $ HH.div [css "m-5 flex flex-row"] $
+    [ HH.div [css "grid-cols-2 w-2/3"]
+      [ HH.input
+        [ css "border-b font-meiryo text-lg w-full"
+        , HP.value inputValue
+        , HE.onValueInput \s -> do
+          Hooks.put inputValueId s
+          case (showTruthTable <<< toTruthTable) <$> parse primEnv s of
+            Right (Just x) -> Hooks.put truthTableId x
+            Left x -> Hooks.put truthTableId $ show x
+            _ -> pure unit
+        ]
       ]
-    , makeText truthTable
+    , HH.div [css "w-1/3 font-meiryo text-lg"] $ makeText truthTable
     ]
