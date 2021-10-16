@@ -19,6 +19,8 @@ to generate this file without the comments in this block.
   , "either"
   , "enums"
   , "foldable-traversable"
+  , "halogen"
+  , "halogen-hooks"
   , "integers"
   , "lists"
   , "maybe"
@@ -28,6 +30,7 @@ to generate this file without the comments in this block.
   , "record"
   , "strings"
   , "tuples"
+  , "unfoldable"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
