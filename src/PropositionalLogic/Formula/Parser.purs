@@ -9,6 +9,7 @@ import Data.String as String
 import Data.Traversable (sequence)
 import LogicWeb.PropositionalLogic.Formula (Associative, BinaryOperator, Formula(..), MonadicOperator, Variable)
 import LogicWeb.PropositionalLogic.Formula as F
+import Control.Alt ((<|>))
 
 type Environment =
   { variables :: Array Variable
@@ -40,12 +41,12 @@ parse :: Environment -> String -> Either ParseError Formula
 parse env str = interpretation <<< shuntingYard =<< split env str
 
 symbol :: Environment -> String -> Either ParseError Symbols
-symbol env str = note (BadRequest NoSuchToken) $ head $ catMaybes
-  [ if env.brackets.left == str then Just LeftBracket else Nothing
-  , if env.brackets.right == str then Just RightBracket else Nothing
-  , Variable <$> find (_ == str) env.variables
-  , MonadicOperator <$> find (\x -> x.symbol == str) env.monadicOperators
-  , BinaryOperator <$> find (\x -> x.symbol == str) env.binaryOperators]
+symbol env str = note (BadRequest NoSuchToken) $
+  if env.brackets.left == str then Just LeftBracket else Nothing
+  <|> if env.brackets.right == str then Just RightBracket else Nothing
+  <|> Variable <$> find (_ == str) env.variables
+  <|> MonadicOperator <$> find (\x -> x.symbol == str) env.monadicOperators
+  <|> BinaryOperator <$> find (\x -> x.symbol == str) env.binaryOperators
 
 interpretation :: Array Symbols -> Either ParseError Formula
 interpretation s = loop s []
