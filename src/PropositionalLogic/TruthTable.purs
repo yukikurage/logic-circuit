@@ -30,4 +30,4 @@ showTruthTable t =
     <$> showBoolean
     <$> t.table (\v -> index xs =<< findIndex (_ == v) t.variables)
   content = joinWith "\n"
-    <$> (traverse showContentLine $ replicateA (length t.variables) [true, false])
+    <$> (traverse showContentLine $ replicateA (length t.variables) [false, true])
