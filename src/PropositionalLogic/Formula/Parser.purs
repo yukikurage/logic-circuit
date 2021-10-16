@@ -1,4 +1,4 @@
-module LogicWeb.PropositionalLogic.Formula.Parser where
+module LogicWeb.PropositionalLogic.Formula.Parser (parse, ParseError, Environment) where
 
 import Prelude
 
@@ -48,22 +48,24 @@ symbol env str = note (BadRequest NoSuchToken) $ head $ catMaybes
   , BinaryOperator <$> find (\x -> x.symbol == str) env.binaryOperators]
 
 interpretation :: Array Symbols -> Either ParseError Formula
-interpretation s = loop {remaining: s, stack: []}
+interpretation s = loop s []
   where
-  loop :: {remaining :: Array Symbols, stack :: Array Formula}
-    -> Either ParseError (Formula)
-  loop state = case uncons state.remaining of
-    Just token -> loop =<< case token.head of
-      MonadicOperator op -> note (BadRequest Inconsistencies) do
-        stack <- uncons state.stack
-        pure {remaining: token.tail, stack: (MonadicOperate op stack.head): stack.tail}
-      BinaryOperator op -> note (BadRequest Inconsistencies) do
-        stack0 <- uncons state.stack
-        stack1 <- uncons stack0.tail
-        pure {remaining: token.tail, stack: (BinaryOperate op stack1.head stack0.head): stack1.tail}
-      Variable v -> pure {remaining: token.tail, stack: (Var v): state.stack}
+  loop :: Array Symbols -> Array Formula
+    -> Either ParseError Formula
+  loop remaining stack = case uncons remaining of
+    Just token -> case token.head of
+      MonadicOperator op -> do
+        st <- note (BadRequest Inconsistencies) $ uncons stack
+        loop token.tail $ MonadicOperate op st.head : st.tail
+      BinaryOperator op -> do
+        stack0 <- note (BadRequest Inconsistencies) $ uncons stack
+        stack1 <- note (BadRequest Inconsistencies) $ uncons stack0.tail
+        loop token.tail
+          $ BinaryOperate op stack1.head stack0.head : stack1.tail
+      Variable v -> loop token.tail $ Var v : stack
       _ -> Left (BadRequest Inconsistencies)
-    Nothing -> note (BadRequest Inconsistencies) $ if length state.stack == 1 then head state.stack else Nothing
+    Nothing -> note (BadRequest Inconsistencies)
+      $ if length stack == 1 then head stack else Nothing
 
 shuntingYard :: Array Symbols -> Array Symbols
 shuntingYard symbols = loop symbols [] []
@@ -74,21 +76,26 @@ shuntingYard symbols = loop symbols [] []
       s@(BinaryOperator o1) -> caseOperator s o1
       LeftBracket -> loop token.tail output $ LeftBracket : stack
       RightBracket ->
-        loop token.tail (output <> extract.init) $ fromMaybe [] $ tail extract.rest
+        loop token.tail (output <> extract.init)
+        $ fromMaybe [] $ tail extract.rest
         where
           frag = case _ of
             LeftBracket -> true
             _ -> false
           extract = span frag stack
-      Variable v -> loop token.tail (output `snoc` (Variable v)) stack
+      Variable v -> loop token.tail (output `snoc` Variable v) stack
       where
-      caseOperator :: forall r. Symbols -> {priority :: Int, associative :: Maybe Associative | r}
+      caseOperator :: forall r. Symbols
+        -> {priority :: Int, associative :: Maybe Associative | r}
         -> Array Symbols
-      caseOperator sym o1 = loop token.tail (output <> extract.init) $ sym : extract.rest
+      caseOperator sym o1 =
+        loop token.tail (output <> extract.init) $ sym : extract.rest
         where
         extract = span (notFrag >>> not) stack
         notFrag s = fromMaybe true
-          $ (\p -> o1.priority > p || (o1.associative /= Just F.Left && o1.priority >= p))
+          $ (\p -> o1.priority > p
+            || (o1.associative /= Just F.Left && o1.priority >= p)
+            )
           <$> priority s
     Nothing -> output <> stack
 
@@ -99,7 +106,8 @@ priority = case _ of
   _ -> Nothing
 
 split :: Environment -> String -> Either ParseError (Array Symbols)
-split env = map concat <<< sequence <<< map loop <<< String.split (String.Pattern " ")
+split env =
+  map concat <<< sequence <<< map loop <<< String.split (String.Pattern " ")
   where
   loop "" = Right []
   loop str = cons <$> current <*> next
@@ -108,10 +116,12 @@ split env = map concat <<< sequence <<< map loop <<< String.split (String.Patter
     current = (\x -> x.prefix) <$> uniquePrefix
     next = (\x -> split env x.after) =<< uniquePrefix
 
-findUniquePrefix :: Environment -> String -> Either ParseError {prefix :: Symbols, after :: String}
+findUniquePrefix :: Environment
+  -> String
+  -> Either ParseError {prefix :: Symbols, after :: String}
 findUniquePrefix env str = result
   where
-  f i = map (\x -> {prefix: x, after: s.after}) $ hush $ symbol env s.before
+  f i = map {prefix: _, after: s.after} $ hush $ symbol env s.before
     where
     s = String.splitAt i str
   filtered = catMaybes
