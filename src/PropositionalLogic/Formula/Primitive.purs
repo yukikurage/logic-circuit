@@ -68,5 +68,8 @@ primEnv =
       <> enumFromTo '0' '9'
   , binaryOperators: [primAnd, primEq, primImplication, primImplication2, primOr]
   , monadicOperators: [primNot]
-  , brackets: {left: "(", right: ")"}
+  , brackets:
+    { left: "("
+    , right: ")"
+    }
   }
