@@ -8,7 +8,7 @@ import Data.Either (Either(..), hush, note)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Data.Traversable (sequence)
-import LogicWeb.PropositionalLogic.Formula (Associative, BinaryOperator, Formula(..), MonadicOperator, Variable)
+import LogicWeb.PropositionalLogic.Formula (Associative, Formula(..), MonadicOperator, Variable, BinaryOperator)
 import LogicWeb.PropositionalLogic.Formula as F
 
 type Environment =
@@ -93,18 +93,15 @@ shuntingYard symbols = loop symbols [] []
         loop token.tail (output <> extract.init) $ sym : extract.rest
         where
         extract = span (notFrag >>> not) stack
-        notFrag s = fromMaybe true
-          $ (\p -> o1.priority > p
-            || (o1.associative /= Just F.Left && o1.priority >= p)
-            )
-          <$> priority s
+        notFrag = case _ of
+          MonadicOperator o2 ->
+            o1.priority > o2.priority
+            || o1.associative /= Just F.Left && o1.priority >= o2.priority
+          BinaryOperator o2 ->
+            o1.priority > o2.priority
+            || o1.associative /= Just F.Left && o1.priority >= o2.priority
+          _ -> true
     Nothing -> output <> stack
-
-priority :: Symbols -> Maybe Int
-priority = case _ of
-  MonadicOperator op -> Just op.priority
-  BinaryOperator op -> Just op.priority
-  _ -> Nothing
 
 split :: Environment -> String -> Either ParseError (Array Symbols)
 split env =
