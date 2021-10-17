@@ -28,9 +28,12 @@ component = Hooks.component \_ _ -> Hooks.do
           _ -> pure unit
         _ -> pure unit
 
-  Hooks.pure $ HH.div [css "flex flex-row h-full"] $
-    [ HH.div [css "flex flex-col w-2/3 overflow-auto"]
+  Hooks.pure $ HH.div [css "flex flex-row h-full relative"] $
+    [ HH.div [css "flex flex-col w-2/3 overflow-auto shadow-lg relative z-30"]
       [ HH.slot formulaInput_ unit FormulaInput.component 1 handleChangedFormula
       ]
     , HH.div [css "w-1/3 font-meiryo text-lg bg-yukiYellow"] $ makeText truthTable
+    , HH.div [css "absolute left-10 bottom-10 h-12 w-12 bg-yukiRed text-white flex justify-center items-center text-2xl rounded-lg"]
+      [ HH.i [css "fas fa-plus"] []
+      ]
     ]

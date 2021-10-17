@@ -1,4 +1,4 @@
-module LogicWeb.PropositionalLogic.Formula.Parser (parse, ParseError, Environment) where
+module LogicWeb.PropositionalLogic.Formula.Parser (parse, ParseError(..), Environment, BadRequestValue(..)) where
 
 import Prelude
 
@@ -27,16 +27,16 @@ data Symbols =
   | RightBracket
 
 data ParseError = BadRequest BadRequestValue | InternalError String
-data BadRequestValue = NoSuchToken | DuplicatedToken String | Inconsistencies
+data BadRequestValue = NoSuchToken String | DuplicatedToken String | Inconsistencies
 
 instance Show ParseError where
   show (BadRequest v) = "Parse Error: BadRequest: " <> show v
   show (InternalError str) = "Parse Error: InternalError: " <> str
 
 instance Show BadRequestValue where
-  show NoSuchToken = "NoSuchToken"
-  show (DuplicatedToken str) = "DuplicatedToken" <> str
-  show Inconsistencies = "Inconsistencies"
+  show (NoSuchToken str) = "NoSuchToken: " <> str
+  show (DuplicatedToken str) = "DuplicatedToken: " <> str
+  show (Inconsistencies) = "Inconsistencies"
 
 parse :: Environment -> String -> Either ParseError Formula
 parse env str = interpretation <<< shuntingYard =<< split env str
@@ -49,7 +49,7 @@ isAlphabet x = elem x $ map codePointFromChar
   <> enumFromTo '0' '9'
 
 symbol :: Environment -> String -> Either ParseError Symbols
-symbol env str = note (BadRequest NoSuchToken) $
+symbol env str = note (BadRequest (NoSuchToken str)) $
   if env.brackets.left == str then Just LeftBracket else Nothing
   <|> if env.brackets.right == str then Just RightBracket else Nothing
   <|> MonadicOperator <$> find (\x -> x.symbol == str) env.monadicOperators
@@ -64,7 +64,7 @@ interpretation s = loop s []
   loop remaining stack = case uncons remaining of
     Just token -> case token.head of
       MonadicOperator op -> do
-        st <- note (BadRequest Inconsistencies) $ uncons stack
+        st <- note (BadRequest (Inconsistencies)) $ uncons stack
         loop token.tail $ MonadicOperate op st.head : st.tail
       BinaryOperator op -> do
         stack0 <- note (BadRequest Inconsistencies) $ uncons stack
@@ -126,9 +126,10 @@ split env =
       next = String.fromCodePointArray res.rest
     Just _ -> cons <$> current <*> (loop =<< next)
       where
-      uniquePrefix = findUniquePrefix env str
+      res = span (not isAlphabet) $ String.toCodePointArray str
+      uniquePrefix = findUniquePrefix env $ String.fromCodePointArray res.init
       current = (_.prefix) <$> uniquePrefix
-      next = (\x -> x.after) <$> uniquePrefix
+      next = (_ <> String.fromCodePointArray res.rest) <$> ((\x -> x.after) <$> uniquePrefix)
     _ -> Right []
 
 findUniquePrefix :: Environment
@@ -143,6 +144,6 @@ findUniquePrefix env str = result
     $ map f
     $ 0 .. String.length str
   result = case length filtered of
-    0 -> Left $ BadRequest NoSuchToken
+    0 -> Left $ BadRequest $ NoSuchToken str
     1 -> note (InternalError "findUniquePrefix") $ head filtered
     _ -> Left $ BadRequest $ DuplicatedToken str
