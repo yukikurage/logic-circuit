@@ -2,11 +2,8 @@ module LogicWeb.PropositionalLogic.Formula.Primitive where
 
 import Prelude
 
-import Data.Enum (enumFromTo)
 import Data.HeytingAlgebra (implies)
 import Data.Maybe (Maybe(..))
-import Data.String (codePointFromChar)
-import Data.String as String
 import LogicWeb.PropositionalLogic.Formula as F
 import LogicWeb.PropositionalLogic.Formula.Parser (Environment)
 
@@ -117,12 +114,7 @@ primEq4 =
 
 primEnv :: Environment
 primEnv =
-  { variables: map (String.singleton <<< codePointFromChar)
-      $ enumFromTo 'a' 'z'
-      <> enumFromTo 'A' 'Z'
-      <> enumFromTo 'α' 'ω'
-      <> enumFromTo '0' '9'
-  , binaryOperators: [primAnd, primAnd2, primAnd3, primEq, primEq2, primEq4, primImplication, primImplication2, primOr, primOr2, primOr3]
+  { binaryOperators: [primAnd, primAnd2, primAnd3, primEq, primEq2, primEq4, primImplication, primImplication2, primOr, primOr2, primOr3]
   , monadicOperators: [primNot, primNot2]
   , brackets:
     { left: "("

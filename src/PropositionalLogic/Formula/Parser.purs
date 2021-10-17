@@ -3,17 +3,18 @@ module LogicWeb.PropositionalLogic.Formula.Parser (parse, ParseError, Environmen
 import Prelude
 
 import Control.Alt ((<|>))
-import Data.Array (catMaybes, concat, cons, find, head, length, snoc, span, tail, uncons, (..), (:))
+import Data.Array (all, catMaybes, concat, cons, elem, find, head, length, snoc, span, tail, uncons, (..), (:))
 import Data.Either (Either(..), hush, note)
+import Data.Enum (enumFromTo)
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.String (CodePoint, codePointFromChar)
 import Data.String as String
 import Data.Traversable (sequence)
 import LogicWeb.PropositionalLogic.Formula (Associative, Formula(..), MonadicOperator, Variable, BinaryOperator)
 import LogicWeb.PropositionalLogic.Formula as F
 
 type Environment =
-  { variables :: Array Variable
-  , monadicOperators :: Array MonadicOperator
+  { monadicOperators :: Array MonadicOperator
   , binaryOperators :: Array BinaryOperator
   , brackets :: {left :: String, right :: String}
   }
@@ -26,7 +27,7 @@ data Symbols =
   | RightBracket
 
 data ParseError = BadRequest BadRequestValue | InternalError String
-data BadRequestValue = NoSuchToken | DuplicatedToken | Inconsistencies
+data BadRequestValue = NoSuchToken | DuplicatedToken String | Inconsistencies
 
 instance Show ParseError where
   show (BadRequest v) = "Parse Error: BadRequest: " <> show v
@@ -34,19 +35,26 @@ instance Show ParseError where
 
 instance Show BadRequestValue where
   show NoSuchToken = "NoSuchToken"
-  show DuplicatedToken = "DuplicatedToken"
+  show (DuplicatedToken str) = "DuplicatedToken" <> str
   show Inconsistencies = "Inconsistencies"
 
 parse :: Environment -> String -> Either ParseError Formula
 parse env str = interpretation <<< shuntingYard =<< split env str
 
+isAlphabet :: CodePoint -> Boolean
+isAlphabet x = elem x $ map codePointFromChar
+  $ enumFromTo 'a' 'z'
+  <> enumFromTo 'A' 'Z'
+  <> enumFromTo 'α' 'ω'
+  <> enumFromTo '0' '9'
+
 symbol :: Environment -> String -> Either ParseError Symbols
 symbol env str = note (BadRequest NoSuchToken) $
   if env.brackets.left == str then Just LeftBracket else Nothing
   <|> if env.brackets.right == str then Just RightBracket else Nothing
-  <|> Variable <$> find (_ == str) env.variables
   <|> MonadicOperator <$> find (\x -> x.symbol == str) env.monadicOperators
   <|> BinaryOperator <$> find (\x -> x.symbol == str) env.binaryOperators
+  <|> if all isAlphabet (String.toCodePointArray str) && String.length str >= 1 then Just (Variable str) else Nothing
 
 interpretation :: Array Symbols -> Either ParseError Formula
 interpretation s = loop s []
@@ -103,16 +111,25 @@ shuntingYard symbols = loop symbols [] []
           _ -> true
     Nothing -> output <> stack
 
+
+
 split :: Environment -> String -> Either ParseError (Array Symbols)
 split env =
   map concat <<< sequence <<< map loop <<< String.split (String.Pattern " ")
   where
-  loop "" = Right []
-  loop str = cons <$> current <*> next
-    where
-    uniquePrefix = findUniquePrefix env str
-    current = (\x -> x.prefix) <$> uniquePrefix
-    next = (\x -> split env x.after) =<< uniquePrefix
+  loop :: String -> Either ParseError (Array Symbols)
+  loop str = case head (String.toCodePointArray str) of
+    Just x | isAlphabet x -> cons current <$> loop next
+      where
+      res = span isAlphabet $ String.toCodePointArray str
+      current = Variable $ String.fromCodePointArray res.init
+      next = String.fromCodePointArray res.rest
+    Just _ -> cons <$> current <*> (loop =<< next)
+      where
+      uniquePrefix = findUniquePrefix env str
+      current = (_.prefix) <$> uniquePrefix
+      next = (\x -> x.after) <$> uniquePrefix
+    _ -> Right []
 
 findUniquePrefix :: Environment
   -> String
@@ -128,4 +145,4 @@ findUniquePrefix env str = result
   result = case length filtered of
     0 -> Left $ BadRequest NoSuchToken
     1 -> note (InternalError "findUniquePrefix") $ head filtered
-    _ -> Left $ BadRequest DuplicatedToken
+    _ -> Left $ BadRequest $ DuplicatedToken str

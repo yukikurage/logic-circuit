@@ -10,6 +10,7 @@ module.exports = {
     extend: {
       fontFamily: {
         'meiryo': ['Meiryo','メイリオ', 'sans-serif'],
+        'math': ['Vollkorn', 'serif']
       },
     },
     colors: {
@@ -23,6 +24,9 @@ module.exports = {
       },
       yukiBlack: {
         DEFAULT: '#323232',
+      },
+      white: {
+        DEFAULT: '#FFFFFF'
       }
     }
   },
