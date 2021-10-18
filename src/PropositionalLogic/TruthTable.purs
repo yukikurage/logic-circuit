@@ -3,7 +3,8 @@ module LogicWeb.PropositionalLogic.TruthTable where
 import Prelude
 
 import Data.Array (findIndex, index, length, replicate)
-import Data.Maybe (Maybe)
+import Data.Array as A
+import Data.Maybe (Maybe(..))
 import Data.String (codePointFromChar, joinWith)
 import Data.String as String
 import Data.Traversable (traverse)
@@ -34,3 +35,13 @@ showTruthTable t =
     <$> t.table (\v -> index xs =<< findIndex (_ == v) t.variables)
   content = joinWith "\n"
     <$> (traverse showContentLine $ replicateA (length t.variables) [false, true])
+
+emptyTruthTable :: TruthTable
+emptyTruthTable =
+  { variables: []
+  , output: ""
+  , table: const Nothing
+  }
+
+null :: TruthTable -> Boolean
+null t = A.null t.variables && t.table (const Nothing) == Nothing

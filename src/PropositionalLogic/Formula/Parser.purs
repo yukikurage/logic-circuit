@@ -3,7 +3,7 @@ module LogicWeb.PropositionalLogic.Formula.Parser (parse, ParseError(..), Enviro
 import Prelude
 
 import Control.Alt ((<|>))
-import Data.Array (all, catMaybes, concat, cons, elem, find, head, length, snoc, span, tail, uncons, (..), (:))
+import Data.Array (all, catMaybes, concat, cons, elem, find, head, length, null, snoc, span, tail, uncons, (..), (:))
 import Data.Either (Either(..), hush, note)
 import Data.Enum (enumFromTo)
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -27,7 +27,7 @@ data Symbols =
   | RightBracket
 
 data ParseError = BadRequest BadRequestValue | InternalError String
-data BadRequestValue = NoSuchToken String | DuplicatedToken String | Inconsistencies
+data BadRequestValue = NoSuchToken String | DuplicatedToken String | Inconsistencies | EmptyRequest
 
 instance Show ParseError where
   show (BadRequest v) = "Parse Error: BadRequest: " <> show v
@@ -37,6 +37,7 @@ instance Show BadRequestValue where
   show (NoSuchToken str) = "NoSuchToken: " <> str
   show (DuplicatedToken str) = "DuplicatedToken: " <> str
   show (Inconsistencies) = "Inconsistencies"
+  show EmptyRequest = "EmptyRequest"
 
 parse :: Environment -> String -> Either ParseError Formula
 parse env str = interpretation <<< shuntingYard =<< split env str
@@ -57,6 +58,7 @@ symbol env str = note (BadRequest (NoSuchToken str)) $
   <|> if all isAlphabet (String.toCodePointArray str) && String.length str >= 1 then Just (Variable str) else Nothing
 
 interpretation :: Array Symbols -> Either ParseError Formula
+interpretation s | null s = Left $ BadRequest EmptyRequest
 interpretation s = loop s []
   where
   loop :: Array Symbols -> Array Formula
