@@ -53,7 +53,7 @@ component = Hooks.component \token initName -> Hooks.do
       , HE.onClick \_ -> Hooks.raise token.outputToken Delete
       ]
       [ HH.i [css "fas fa-times"][]]
-    , HH.div [css $ "absolute right-1 bottom-1 rounded-lg text-base bg-yukiBlack text-white px-2 py-1 bg-opacity-50 "
+    , HH.div [css $ "absolute right-1 bottom-1 rounded-md text-base bg-yukiBlack text-white px-2 py-1 bg-opacity-50 "
         <> if errorMessage == "" then "invisible" else "visible"]
       [ HH.text errorMessage
       ]

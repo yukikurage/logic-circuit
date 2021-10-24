@@ -14,6 +14,7 @@ import Halogen.Hooks as Hooks
 import LogicWeb.Components.Common (css)
 import LogicWeb.Components.FormulaInput (Output(..))
 import LogicWeb.Components.FormulaInput as FormulaInput
+import LogicWeb.Components.HTML.RootButton (button)
 import LogicWeb.Components.HTML.TruthTable (displayTruthTable)
 import LogicWeb.PropositionalLogic (toTruthTable)
 import LogicWeb.PropositionalLogic.Formula.Parser (BadRequestValue(..), ParseError(..))
@@ -36,15 +37,14 @@ component = Hooks.component \_ _ -> Hooks.do
       Delete -> Hooks.put formulasId $ delete id formulas
 
   Hooks.pure $ HH.div [css "flex flex-row h-full relative"] $
-    [ HH.div [css "flex flex-col flex-grow overflow-auto shadow-lg relative z-30"]
-      $ flip mapWithIndex formulas \i id -> HH.slot formulaInput_ id FormulaInput.component (show i) (handleChangedFormula id)
+    [ HH.div [css "flex flex-col flex-grow overflow-auto shadow-md relative z-30"] $
+      [ HH.div [css "h-12 w-16 m-6"]
+        [ button [HH.i [css "fas fa-plus"] []] \_ -> case (\m -> find (flip notElem formulas) $ range 0 $ m + 1) =<< maximum formulas of
+            Just x -> Hooks.put formulasId $ (formulas <> [x])
+            Nothing -> Hooks.put formulasId $ [0]
+        ]
+      ]
+      <>
+      flip mapWithIndex formulas \i id -> HH.slot formulaInput_ id FormulaInput.component (show i) (handleChangedFormula id)
     , HH.div [css "overflow-auto w-auto font-meiryo text-lg bg-yukiYellow flex-col flex items-center p-10"] $ [displayTruthTable truthTable]
-    , HH.div
-      [ css "z-40 absolute left-10 bottom-10 h-14 w-14 border-2 border-yukiRed border-b-yu bg-white text-yukiRed hover:bg-yukiRed hover:text-white flex justify-center items-center text-2xl rounded-lg cursor-pointer"
-      , HE.onClick \_ -> case (\m -> find (flip notElem formulas) $ range 0 $ m + 1) =<< maximum formulas of
-        Just x -> Hooks.put formulasId $ (formulas <> [x])
-        Nothing -> Hooks.put formulasId $ [0]
-      ]
-      [ HH.i [css "fas fa-plus"] []
-      ]
     ]

@@ -12,7 +12,7 @@ import LogicWeb.PropositionalLogic.TruthTable as T
 
 displayTruthTable :: forall w i. TruthTable -> HH.HTML w i
 displayTruthTable t | T.null t = HH.table_ []
-displayTruthTable t = HH.div [css "shadow-lg bg-white relative z-30 p-5 rounded-lg flex flex-col items-center"]
+displayTruthTable t = HH.div [css "shadow-md bg-white relative z-30 p-5 rounded-md flex flex-col items-center text-lg"]
   [ HH.text "真理値表"
   , HH.table [css "table-fixed text-xl border-collapse whitespace-nowrap mt-3 tracking-wider"] $
     [ HH.tr [css "font-math h-10"] $ map (HH.th [css "border-b-4 px-3 border-yukiRed"] <<< singleton <<< HH.text) t.variables

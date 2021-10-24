@@ -12,7 +12,8 @@ to generate this file without the comments in this block.
 -}
 { name = "my-project"
 , dependencies =
-  [ "arrays"
+  [ "aff"
+  , "arrays"
   , "console"
   , "control"
   , "debug"
@@ -32,6 +33,9 @@ to generate this file without the comments in this block.
   , "strings"
   , "tuples"
   , "unfoldable"
+  , "web-dom"
+  , "web-html"
+  , "web-uievents"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
