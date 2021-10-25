@@ -3,7 +3,9 @@ module LogicWeb.Components.FormulaInput where
 import Prelude
 
 import Data.Either (Either(..))
+import Data.Maybe (Maybe(..))
 import Data.Tuple.Nested ((/\))
+import Effect.Class (class MonadEffect)
 import Halogen (Component)
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -16,23 +18,31 @@ import LogicWeb.PropositionalLogic.Formula.Primitive (primEnv)
 
 data Output = Changed (Either ParseError Formula) | Delete
 
-component :: forall q m. Component q String Output m
-component = Hooks.component \token initName -> Hooks.do
-  inputValue /\ inputValueId <- Hooks.useState ""
+data Query a = GetValue (String -> a) | SetValue String a
+
+component :: forall m. MonadEffect m => Component Query {name :: String} Output m
+component = Hooks.component \token {name} -> Hooks.do
   errorMessage /\ errorMessageId <- Hooks.useState ""
+  formulaInput /\ formulaInputId <- Hooks.useState ""
   isFocus /\ isFocusId <- Hooks.useState false
+
+  Hooks.useQuery token.queryToken case _ of
+    GetValue reply -> pure $ Just $ reply formulaInput
+    SetValue str a -> do
+      Hooks.put formulaInputId str
+      pure $ Just $ a
 
   Hooks.pure $ HH.div [css "flex flex-row items-start w-full border-b-2 border-yukiRed relative"]
     [ HH.div
       [ css $ "text-lg px-2 py rounded-br-lg border-yukiRed "
         <> if isFocus then "bg-yukiRed text-white" else "bg-white text-yukiBlack"
       ]
-      [ HH.text $ initName]
+      [ HH.text $ name ]
     , HH.input
       [ css "font-math text-3xl flex-grow p-4 tracking-widest outline-none w-full"
-      , HP.value inputValue
+      , HP.value formulaInput
       , HE.onValueInput \s -> do
-        Hooks.put inputValueId s
+        Hooks.put formulaInputId s
         let
           result = parse primEnv s
         Hooks.raise token.outputToken $ Changed $ result
@@ -45,7 +55,7 @@ component = Hooks.component \token initName -> Hooks.do
           Left (BadRequest EmptyRequest) -> ""
       , HE.onFocusIn \_ -> do
         Hooks.put isFocusId true
-        Hooks.raise token.outputToken $ Changed $ parse primEnv inputValue
+        Hooks.raise token.outputToken $ Changed $ parse primEnv formulaInput
       , HE.onFocusOut \_ -> Hooks.put isFocusId false
       ]
     , HH.div

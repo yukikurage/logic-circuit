@@ -2,14 +2,14 @@ module LogicWeb.Components.Pages.TruthTableEditor where
 
 import Prelude
 
-import Data.Array (concat, findIndex, index, length, mapWithIndex, modifyAt, nub, null, singleton, updateAt, zipWith)
+import Data.Array (concat, findIndex, index, length, mapWithIndex, modifyAt, nub, singleton, updateAt, zipWith)
 import Data.Int (pow)
-import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Traversable (sequence, sum, traverse)
-import Data.Tuple.Nested ((/\))
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Traversable (sequence, sum)
 import Data.Tuple.Nested ((/\))
 import Data.Unfoldable (replicateA)
 import Halogen (Component)
+import Halogen.HTML (HTML)
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
@@ -17,10 +17,9 @@ import Halogen.Hooks as Hooks
 import LogicWeb.Components.Common (css)
 import LogicWeb.Components.HTML.RootButton (button)
 import LogicWeb.Components.HTML.TruthTable (displayTruthTable)
-import LogicWeb.PropositionalLogic.Formula (variables)
-import LogicWeb.PropositionalLogic.TruthTable (TruthTable, emptyTruthTable)
-import LogicWeb.PropositionalLogic.TruthTable as T
+import LogicWeb.PropositionalLogic.TruthTable (TruthTable)
 
+divButton :: forall t2 t3. Boolean -> HTML t2 t3
 divButton frag = HH.div [css "w-full h-full flex justify-center items-center cursor-pointer"]
   [ HH.div [css $ "h-5 w-5 rounded-md " <> if frag then "bg-yukiRed" else "bg-transparent"][]
   ]

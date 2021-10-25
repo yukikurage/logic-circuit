@@ -113,8 +113,6 @@ shuntingYard symbols = loop symbols [] []
           _ -> true
     Nothing -> output <> stack
 
-
-
 split :: Environment -> String -> Either ParseError (Array Symbols)
 split env =
   map concat <<< sequence <<< map loop <<< String.split (String.Pattern " ")

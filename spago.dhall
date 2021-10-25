@@ -30,6 +30,7 @@ to generate this file without the comments in this block.
   , "prelude"
   , "psci-support"
   , "record"
+  , "safe-coerce"
   , "strings"
   , "tuples"
   , "unfoldable"
