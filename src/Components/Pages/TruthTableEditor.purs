@@ -14,18 +14,23 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Halogen.Hooks as Hooks
+import Halogen.Store.Monad (class MonadStore)
 import LogicWeb.Class.ContentHandler (class ContentHandler)
 import LogicWeb.Components.Common (css)
 import LogicWeb.Components.HTML.RootButton (button)
+import LogicWeb.Components.HTML.TruthTable (displayTruthTable)
 import LogicWeb.PropositionalLogic.TruthTable (TruthTable(..))
-import Logic
+import LogicWeb.Store as Store
 
 divButton :: forall t2 t3. Boolean -> HTML t2 t3
 divButton frag = HH.div [css "w-full h-full flex justify-center items-center cursor-pointer"]
   [ HH.div [css $ "h-5 w-5 rounded-md " <> if frag then "bg-yukiRed" else "bg-transparent"][]
   ]
 
-component :: forall q o m. ContentHandler m => Component q TruthTable o m
+component :: forall q o m.
+  ContentHandler m
+  => MonadStore Store.Action Store.Store m
+  => Component q TruthTable o m
 component = Hooks.component \_ (TruthTable input) -> Hooks.do
   variables /\ variablesId <- Hooks.useState input.variables
   results /\ resultsId <- Hooks.useState
@@ -75,4 +80,4 @@ component = Hooks.component \_ (TruthTable input) -> Hooks.do
         <>
         mapWithIndex makeRow (replicateA (length variables) [false, true] :: Array (Array _))
       ]
-    ] <> (fromMaybe [HH.text "変数名が重複しています"] $ (singleton <<< (\input -> )) <$> makeTruthTable)
+    ] <> (fromMaybe [HH.text "変数名が重複しています"] $ (singleton <<< displayTruthTable) <$> makeTruthTable)

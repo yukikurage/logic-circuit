@@ -9,6 +9,7 @@ import Halogen (Component)
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.Hooks as Hooks
+import Halogen.Store.Monad (class MonadStore)
 import LogicWeb.Class.ContentHandler (class ContentHandler)
 import LogicWeb.Components.Common (css)
 import LogicWeb.Components.Pages.FormulaEditor as FormulaEditor
@@ -16,11 +17,15 @@ import LogicWeb.Components.Pages.TruthTableEditor as TruthTableEditor
 import LogicWeb.PropositionalLogic.TruthTable (TruthTable(..))
 import LogicWeb.Type.Page (Page(..))
 import Type.Proxy (Proxy(..))
+import LogicWeb.Store as Store
 
 formulaEditor_ = Proxy :: Proxy "formulaEditor"
 truthTableEditor_ = Proxy :: Proxy "truthTableEditor"
 
-component :: forall q i o m. MonadEffect m => ContentHandler m => Component q i o m
+component :: forall q i o m. MonadEffect m
+  => MonadStore Store.Action Store.Store m
+  => ContentHandler m
+  => Component q i o m
 component = Hooks.component \_ _ -> Hooks.do
   page /\ pageId <- Hooks.useState FormulaEditor
 

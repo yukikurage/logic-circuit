@@ -23,6 +23,7 @@ to generate this file without the comments in this block.
   , "foldable-traversable"
   , "halogen"
   , "halogen-hooks"
+  , "halogen-store"
   , "integers"
   , "lists"
   , "maybe"
@@ -32,10 +33,12 @@ to generate this file without the comments in this block.
   , "record"
   , "safe-coerce"
   , "strings"
+  , "transformers"
   , "tuples"
   , "unfoldable"
   , "web-dom"
   , "web-html"
+  , "web-storage"
   , "web-uievents"
   ]
 , packages = ./packages.dhall
