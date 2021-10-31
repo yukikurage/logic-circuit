@@ -2,7 +2,7 @@ module LogicWeb.Components.Pages.FormulaEditor where
 
 import Prelude
 
-import Data.Array (catMaybes, deleteAt, find, length, mapWithIndex, notElem, range)
+import Data.Array (catMaybes, delete, deleteAt, find, length, mapWithIndex, notElem, range)
 import Data.Either (Either(..))
 import Data.Foldable (maximum)
 import Data.FoldableWithIndex (forWithIndex_)
@@ -33,7 +33,7 @@ component = Hooks.component \token _ -> Hooks.do
   formulaInputs /\ formulaInputsId <- Hooks.useState []
 
   let
-    handleChangedFormula i = case _ of
+    handleChangedFormula id = case _ of
       FormulaInput.Changed o -> do
         case o of
           Right f -> do Hooks.put truthTableId $ toTruthTable f
@@ -41,7 +41,7 @@ component = Hooks.component \token _ -> Hooks.do
           _ -> Hooks.put truthTableId $ emptyTruthTable
         saveData
       Delete -> do
-        Hooks.put formulaInputsId $ fromMaybe [] $ deleteAt i formulaInputs
+        Hooks.put formulaInputsId $ delete id formulaInputs
         saveData
     saveData = do
       xs <- for formulaInputs \id -> Hooks.request token.slotToken formulaInput_ id GetValue
@@ -64,6 +64,6 @@ component = Hooks.component \token _ -> Hooks.do
         ]
       ]
       <>
-      flip mapWithIndex formulaInputs \i id -> HH.slot formulaInput_ id FormulaInput.component {name: (show i)} (handleChangedFormula i)
+      flip mapWithIndex formulaInputs \i id -> HH.slot formulaInput_ id FormulaInput.component {name: (show i)} (handleChangedFormula id)
     , HH.div [css "overflow-auto w-auto font-meiryo text-lg bg-yukiYellow flex-col flex items-center p-10"] $ [displayTruthTable truthTable]
     ]

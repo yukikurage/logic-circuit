@@ -13,6 +13,7 @@ import LogicWeb.Class.ContentHandler (class ContentHandler)
 import LogicWeb.Components.Common (css)
 import LogicWeb.Components.Pages.FormulaEditor as FormulaEditor
 import LogicWeb.Components.Pages.TruthTableEditor as TruthTableEditor
+import LogicWeb.PropositionalLogic.TruthTable (TruthTable(..))
 import LogicWeb.Type.Page (Page(..))
 import Type.Proxy (Proxy(..))
 
@@ -41,7 +42,7 @@ component = Hooks.component \_ _ -> Hooks.do
     , HH.div [css "min-h-screen flex-grow"]
       [ case page of
           FormulaEditor -> HH.slot_ formulaEditor_ unit FormulaEditor.component unit
-          TruthTableEditor -> HH.slot_ truthTableEditor_ unit TruthTableEditor.component $ 
+          TruthTableEditor -> HH.slot_ truthTableEditor_ unit TruthTableEditor.component $ TruthTable
             { variables: ["α"]
             , output: "output"
             , table: \f -> case f "0" of

@@ -14,18 +14,19 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Halogen.Hooks as Hooks
+import LogicWeb.Class.ContentHandler (class ContentHandler)
 import LogicWeb.Components.Common (css)
 import LogicWeb.Components.HTML.RootButton (button)
-import LogicWeb.Components.HTML.TruthTable (displayTruthTable)
-import LogicWeb.PropositionalLogic.TruthTable (TruthTable)
+import LogicWeb.PropositionalLogic.TruthTable (TruthTable(..))
+import Logic
 
 divButton :: forall t2 t3. Boolean -> HTML t2 t3
 divButton frag = HH.div [css "w-full h-full flex justify-center items-center cursor-pointer"]
   [ HH.div [css $ "h-5 w-5 rounded-md " <> if frag then "bg-yukiRed" else "bg-transparent"][]
   ]
 
-component :: forall q o m. Component q TruthTable o m
-component = Hooks.component \_ input -> Hooks.do
+component :: forall q o m. ContentHandler m => Component q TruthTable o m
+component = Hooks.component \_ (TruthTable input) -> Hooks.do
   variables /\ variablesId <- Hooks.useState input.variables
   results /\ resultsId <- Hooks.useState
     $ map (\xs -> fromMaybe false
@@ -33,7 +34,7 @@ component = Hooks.component \_ input -> Hooks.do
     $ replicateA (length input.variables) [false, true] -- Hooks.useState
 
   let
-    makeTruthTable | nub variables == variables = Just
+    makeTruthTable | nub variables == variables = Just $ TruthTable
       { variables: variables
       , output: ""
       , table: \f -> index results
@@ -74,4 +75,4 @@ component = Hooks.component \_ input -> Hooks.do
         <>
         mapWithIndex makeRow (replicateA (length variables) [false, true] :: Array (Array _))
       ]
-    ] <> (fromMaybe [HH.text "変数名が重複しています"] $ (singleton <<< displayTruthTable) <$> makeTruthTable)
+    ] <> (fromMaybe [HH.text "変数名が重複しています"] $ (singleton <<< (\input -> )) <$> makeTruthTable)
