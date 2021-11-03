@@ -30,6 +30,7 @@ to generate this file without the comments in this block.
   , "ordered-collections"
   , "prelude"
   , "psci-support"
+  , "read"
   , "record"
   , "safe-coerce"
   , "strings"

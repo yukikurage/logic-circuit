@@ -31,7 +31,7 @@ instance PropositionalLogic Formula where
 cnf :: forall a. PropositionalLogic a => a -> Maybe Formula
 cnf a = res xs
   where
-  (TruthTable t) = toTruthTable a
+  TruthTable t = toTruthTable a
   xs = filter
     (\vs -> t.table (\v -> index vs =<< findIndex (_ == v) t.variables) == Just false)
     $ replicateA (length t.variables) [false, true]
@@ -46,3 +46,23 @@ cnf a = res xs
   res :: Array (Array Boolean) -> Maybe Formula
   res xs = bind (uncons xs) \{head, tail} -> do
     foldl (\mf x -> BinaryOperate primAnd <$> mf <*> term x) (term head) tail
+
+-- | 宣言標準形
+dnf :: forall a. PropositionalLogic a => a -> Maybe Formula
+dnf a = res xs
+  where
+  TruthTable t = toTruthTable a
+  xs = filter
+    (\vs -> t.table (\v -> index vs =<< findIndex (_ == v) t.variables) == Just true)
+    $ replicateA (length t.variables) [false, true]
+
+  literal :: Int -> Boolean -> Maybe Formula
+  literal i f = if f then v else MonadicOperate primNot <$> v
+    where
+    v = Var <$> index t.variables i
+  term :: Array Boolean -> Maybe Formula
+  term xs = bind (uncons xs) \{head, tail} -> do
+    foldlWithIndex (\i mf x -> BinaryOperate primAnd <$> mf <*> literal (i + 1) x) (literal 0 head) tail
+  res :: Array (Array Boolean) -> Maybe Formula
+  res xs = bind (uncons xs) \{head, tail} -> do
+    foldl (\mf x -> BinaryOperate primOr <$> mf <*> term x) (term head) tail

@@ -10,7 +10,6 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.Hooks as Hooks
 import Halogen.Store.Monad (class MonadStore)
-import LogicWeb.Class.ContentHandler (class ContentHandler)
 import LogicWeb.Components.Common (css)
 import LogicWeb.Components.Pages.FormulaEditor as FormulaEditor
 import LogicWeb.Components.Pages.TruthTableEditor as TruthTableEditor
@@ -24,11 +23,9 @@ truthTableEditor_ = Proxy :: Proxy "truthTableEditor"
 
 component :: forall q i o m. MonadEffect m
   => MonadStore Store.Action Store.Store m
-  => ContentHandler m
   => Component q i o m
 component = Hooks.component \_ _ -> Hooks.do
   page /\ pageId <- Hooks.useState FormulaEditor
-
   let
     makeMenu iconFont p =
       HH.div
@@ -44,7 +41,7 @@ component = Hooks.component \_ _ -> Hooks.do
       [ makeMenu "fas fa-align-left" FormulaEditor
       , makeMenu "fas fa-table" TruthTableEditor
       ]
-    , HH.div [css "min-h-screen flex-grow"]
+    , HH.div [css "min-h-screen flex-grow bg-yukiYellow"]
       [ case page of
           FormulaEditor -> HH.slot_ formulaEditor_ unit FormulaEditor.component unit
           TruthTableEditor -> HH.slot_ truthTableEditor_ unit TruthTableEditor.component $ TruthTable

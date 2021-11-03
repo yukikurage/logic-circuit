@@ -12,6 +12,15 @@ module.exports = {
         'meiryo': ['Meiryo','メイリオ', 'sans-serif'],
         'math': ['Vollkorn', 'serif']
       },
+      animation: {
+        'fade-in-quick': 'fade-in-keyframes 50ms linear 1',
+      },
+      keyframes: {
+        'fade-in-keyframes': {
+          '0%': {opacity: '0', top: '-2px'},
+          '100%': {opacity: '1', top: '0px'},
+        },
+      },
     },
     colors: {
       transparent: 'transparent',
@@ -20,7 +29,7 @@ module.exports = {
         DEFAULT: '#A8233E',
       },
       yukiYellow: {
-        DEFAULT: '#F5F1E7',
+        DEFAULT: '#f2f1ed',
       },
       yukiBlack: {
         DEFAULT: '#323232',
