@@ -4612,6 +4612,7 @@ var PS = {};
   var Data_Ordering = $PS["Data.Ordering"];
   var Data_Semigroup = $PS["Data.Semigroup"];
   var Data_Tuple = $PS["Data.Tuple"];
+  var zip = $foreign.zipWith(Data_Tuple.Tuple.create);
   var updateAt = $foreign["_updateAt"](Data_Maybe.Just.create)(Data_Maybe.Nothing.value);
   var unsafeIndex = function (dictPartial) {
       return $foreign.unsafeIndexImpl;
@@ -4810,9 +4811,6 @@ var PS = {};
           };
       };
   };
-  var $$delete = function (dictEq) {
-      return deleteBy(Data_Eq.eq(dictEq));
-  };
   var cons = function (x) {
       return function (xs) {
           return Data_Semigroup.append(Data_Semigroup.semigroupArray)([ x ])(xs);
@@ -4840,6 +4838,7 @@ var PS = {};
   exports["notElem"] = notElem;
   exports["find"] = find;
   exports["findIndex"] = findIndex;
+  exports["deleteAt"] = deleteAt;
   exports["updateAt"] = updateAt;
   exports["modifyAt"] = modifyAt;
   exports["catMaybes"] = catMaybes;
@@ -4847,8 +4846,8 @@ var PS = {};
   exports["foldl"] = foldl;
   exports["span"] = span;
   exports["nub"] = nub;
-  exports["delete"] = $$delete;
   exports["deleteBy"] = deleteBy;
+  exports["zip"] = zip;
   exports["range"] = $foreign.range;
   exports["length"] = $foreign.length;
   exports["concat"] = $foreign.concat;
@@ -9761,7 +9760,9 @@ var PS = {};
   var th = element("th");  
   var tr = element("tr");
   var div = element("div");
+  var div_ = div([  ]);
   exports["div"] = div;
+  exports["div_"] = div_;
   exports["i"] = i;
   exports["input"] = input;
   exports["table"] = table;
@@ -11645,24 +11646,33 @@ var PS = {};
   var Data_Traversable = $PS["Data.Traversable"];
   var LogicWeb_Common = $PS["LogicWeb.Common"];                
   var toString = function (raw) {
-      return Data_String_Common.joinWith(",")(raw.variables) + (":" + Data_String_Common.joinWith(",")(Data_Functor.map(Data_Functor.functorArray)(LogicWeb_Common.showBool)(raw.results)));
+      return raw.name + (":" + (Data_String_Common.joinWith(",")(raw.variables) + (":" + Data_String_Common.joinWith(",")(Data_Functor.map(Data_Functor.functorArray)(LogicWeb_Common.showBool)(raw.results)))));
   };
   var fromString = function (str) {
       var spl = Data_String_Common.split(":")(str);
-      return Control_Bind.bind(Data_Maybe.bindMaybe)(Data_Array.index(spl)(0))(function (vs) {
-          return Control_Bind.bind(Data_Maybe.bindMaybe)(Data_Array.index(spl)(1))(function (rs) {
-              var variables = Data_String_Common.split(",")(vs);
-              return Control_Bind.bind(Data_Maybe.bindMaybe)(Data_Traversable.traverse(Data_Traversable.traversableArray)(Data_Maybe.applicativeMaybe)(LogicWeb_Common.readBool)(Data_String_Common.split(",")(rs)))(function (results) {
-                  return Control_Applicative.pure(Data_Maybe.applicativeMaybe)({
-                      variables: variables,
-                      results: results
+      return Control_Bind.bind(Data_Maybe.bindMaybe)(Data_Array.index(spl)(0))(function (name) {
+          return Control_Bind.bind(Data_Maybe.bindMaybe)(Data_Array.index(spl)(1))(function (vs) {
+              return Control_Bind.bind(Data_Maybe.bindMaybe)(Data_Array.index(spl)(2))(function (rs) {
+                  var variables = Data_String_Common.split(",")(vs);
+                  return Control_Bind.bind(Data_Maybe.bindMaybe)(Data_Traversable.traverse(Data_Traversable.traversableArray)(Data_Maybe.applicativeMaybe)(LogicWeb_Common.readBool)(Data_String_Common.split(",")(rs)))(function (results) {
+                      return Control_Applicative.pure(Data_Maybe.applicativeMaybe)({
+                          variables: variables,
+                          results: results,
+                          name: name
+                      });
                   });
               });
           });
       });
   };
+  var emptyRawTruthTable = {
+      name: "New Truth Table",
+      variables: [ "P" ],
+      results: [ true, false ]
+  };
   exports["toString"] = toString;
   exports["fromString"] = fromString;
+  exports["emptyRawTruthTable"] = emptyRawTruthTable;
 })(PS);
 (function(exports) {
   "use strict";
@@ -11710,6 +11720,7 @@ var PS = {};
   $PS["LogicWeb.Store"] = $PS["LogicWeb.Store"] || {};
   var exports = $PS["LogicWeb.Store"];
   var Control_Bind = $PS["Control.Bind"];
+  var Data_Eq = $PS["Data.Eq"];
   var Data_Functor = $PS["Data.Functor"];
   var Data_Maybe = $PS["Data.Maybe"];
   var Data_String_Common = $PS["Data.String.Common"];
@@ -11770,16 +11781,30 @@ var PS = {};
                   truthTables: v.value0
               };
           };
-          throw new Error("Failed pattern match at LogicWeb.Store (line 27, column 16 - line 29, column 46): " + [ v.constructor.name ]);
+          throw new Error("Failed pattern match at LogicWeb.Store (line 30, column 16 - line 32, column 46): " + [ v.constructor.name ]);
       };
+  };
+  var initialStore = {
+      formulas: [ "(\xacP&P)=>Q" ],
+      truthTables: [ {
+          name: "Example",
+          variables: [ "P", "Q" ],
+          results: [ true, false, false, true ]
+      } ]
   };
   var load = function (dictMonadEffect) {
       return function (dictMonadStore) {
           return Control_Bind.bind((dictMonadEffect.Monad0()).Bind1())(Effect_Class.liftEffect(dictMonadEffect)(Control_Bind.bindFlipped(Effect.bindEffect)(Web_HTML_Window.localStorage)(Web_HTML.window)))(function (s) {
               return Control_Bind.bind((dictMonadEffect.Monad0()).Bind1())(Effect_Class.liftEffect(dictMonadEffect)(Web_Storage_Storage.getItem("formulas")(s)))(function (fs) {
                   return Control_Bind.bind((dictMonadEffect.Monad0()).Bind1())(Effect_Class.liftEffect(dictMonadEffect)(Web_Storage_Storage.getItem("truthTables")(s)))(function (ts) {
-                      var truthTables = Data_Maybe.fromMaybe([  ])(Control_Bind.bindFlipped(Data_Maybe.bindMaybe)(Data_Traversable.traverse(Data_Traversable.traversableArray)(Data_Maybe.applicativeMaybe)(LogicWeb_Type_RawTruthTable.fromString))(Data_Functor.map(Data_Maybe.functorMaybe)(Data_String_Common.split(";"))(ts)));
-                      var formulas = Data_Maybe.fromMaybe([  ])(Data_Functor.map(Data_Maybe.functorMaybe)(Data_String_Common.split(";"))(fs));
+                      var truthTables = Data_Maybe.fromMaybe(initialStore.truthTables)(Control_Bind.bindFlipped(Data_Maybe.bindMaybe)(Data_Traversable.traverse(Data_Traversable.traversableArray)(Data_Maybe.applicativeMaybe)(LogicWeb_Type_RawTruthTable.fromString))(Data_Functor.map(Data_Maybe.functorMaybe)(Data_String_Common.split(";"))(ts)));
+                      var formulas = (function (x) {
+                          var $12 = Data_Eq.eq(Data_Eq.eqArray(Data_Eq.eqString))(x)([ "" ]);
+                          if ($12) {
+                              return [  ];
+                          };
+                          return x;
+                      })(Data_Maybe.fromMaybe(initialStore.formulas)(Data_Functor.map(Data_Maybe.functorMaybe)(Data_String_Common.split(";"))(fs)));
                       return Control_Bind.discard(Control_Bind.discardUnit)((dictMonadEffect.Monad0()).Bind1())(Halogen_Store_Monad.updateStore(dictMonadStore)(new SetFormulas(formulas)))(function () {
                           return Halogen_Store_Monad.updateStore(dictMonadStore)(new SetTruthTables(truthTables));
                       });
@@ -11787,10 +11812,6 @@ var PS = {};
               });
           });
       };
-  };
-  var initialStore = {
-      formulas: [  ],
-      truthTables: [  ]
   };
   exports["initialStore"] = initialStore;
   exports["SetFormulas"] = SetFormulas;
@@ -12384,49 +12405,66 @@ var PS = {};
       Delete.value = new Delete();
       return Delete;
   })();
+  var Focus = (function () {
+      function Focus() {
+
+      };
+      Focus.value = new Focus();
+      return Focus;
+  })();
   var component = function (dictMonadEffect) {
       return Halogen_Hooks_Component.component(function (token) {
           return function (v) {
               return Halogen_Hooks_Hook.bind(Halogen_Hooks.useState(""))(function (v1) {
                   return Halogen_Hooks_Hook.bind(Halogen_Hooks.useState(""))(function (v2) {
                       return Halogen_Hooks_Hook.bind(Halogen_Hooks.useState(false))(function (v3) {
-                          return Halogen_Hooks_Hook.discard(Halogen_Hooks.useQuery(token.queryToken)(function (v4) {
-                              if (v4 instanceof GetValue) {
-                                  return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Maybe.Just.create(v4.value0(v2.value0)));
-                              };
-                              if (v4 instanceof SetValue) {
-                                  return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(v4.value0))(function () {
-                                      return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Maybe.Just.create(v4.value1));
-                                  });
-                              };
-                              throw new Error("Failed pattern match at LogicWeb.Components.Input (line 29, column 35 - line 33, column 22): " + [ v4.constructor.name ]);
-                          }))(function () {
-                              return Halogen_Hooks_Hook.pure(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-row items-start w-full border-b-2 border-yukiRed relative") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("text-lg px-2 py rounded-br-lg border-yukiRed " + (function () {
-                                  if (v3.value0) {
-                                      return "bg-yukiRed text-white";
+                          return Halogen_Hooks_Hook.discard(Halogen_Hooks.useLifecycleEffect(Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v1.value1)(v.messageHandler(v2.value0)))(function () {
+                              return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Maybe.Nothing.value);
+                          })))(function () {
+                              return Halogen_Hooks_Hook.discard(Halogen_Hooks.useQuery(token.queryToken)(function (v4) {
+                                  if (v4 instanceof GetValue) {
+                                      return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Maybe.Just.create(v4.value0(v2.value0)));
                                   };
-                                  return "bg-white text-yukiBlack";
-                              })()) ])([ Halogen_HTML_Core.text(v.name) ]), Halogen_HTML_Elements.input([ LogicWeb_Components_Common.css("font-math text-3xl flex-grow p-4 tracking-widest outline-none w-full"), Halogen_HTML_Properties.value(v2.value0), Halogen_HTML_Events.onValueInput(function (s) {
-                                  return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(s))(function () {
-                                      return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.raise(token.outputToken)(Changed.create(s)))(function () {
-                                          return Halogen_Hooks_HookM.put(v1.value1)(v.messageHandler(s));
+                                  if (v4 instanceof SetValue) {
+                                      return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(v4.value0))(function () {
+                                          return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v1.value1)(v.messageHandler(v4.value0)))(function () {
+                                              return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Maybe.Just.create(v4.value1));
+                                          });
                                       });
-                                  });
-                              }), Halogen_HTML_Events.onFocusIn(function (v4) {
-                                  return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v3.value1)(true))(function () {
-                                      return Halogen_Hooks_HookM.raise(token.outputToken)(Changed.create(v2.value0));
-                                  });
-                              }), Halogen_HTML_Events.onFocusOut(function (v4) {
-                                  return Halogen_Hooks_HookM.put(v3.value1)(false);
-                              }) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("absolute right-0 top-0 bg-transparent rounded-bl-lg border-yukiRed b text-yukiRed hover:bg-yukiRed hover:text-white text-xl cursor-pointer px-2"), Halogen_HTML_Events.onClick(function (v4) {
-                                  return Halogen_Hooks_HookM.raise(token.outputToken)(Delete.value);
-                              }) ])([ Halogen_HTML_Elements.i([ LogicWeb_Components_Common.css("fas fa-times") ])([  ]) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("absolute right-1 bottom-1 rounded-md text-base bg-yukiBlack text-white px-2 py-1 bg-opacity-50 " + (function () {
-                                  var $18 = v1.value0 === "";
-                                  if ($18) {
-                                      return "invisible";
                                   };
-                                  return "visible";
-                              })()) ])([ Halogen_HTML_Core.text(v1.value0) ]) ]));
+                                  throw new Error("Failed pattern match at LogicWeb.Components.Input (line 33, column 35 - line 38, column 22): " + [ v4.constructor.name ]);
+                              }))(function () {
+                                  return Halogen_Hooks_Hook.pure(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-row items-start w-full border-b-2 border-yukiRed relative") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("text-lg px-2 py rounded-br-lg border-yukiRed " + (function () {
+                                      if (v3.value0) {
+                                          return "bg-yukiRed text-white";
+                                      };
+                                      return "bg-white text-yukiBlack";
+                                  })()) ])([ Halogen_HTML_Core.text(v.name) ]), Halogen_HTML_Elements.input([ LogicWeb_Components_Common.css("font-math text-3xl flex-grow p-4 tracking-widest outline-none w-full"), Halogen_HTML_Properties.value(v2.value0), Halogen_HTML_Events.onValueInput(function (s) {
+                                      return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(s))(function () {
+                                          return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.raise(token.outputToken)(Changed.create(s)))(function () {
+                                              return Halogen_Hooks_HookM.put(v1.value1)(v.messageHandler(s));
+                                          });
+                                      });
+                                  }), Halogen_HTML_Events.onFocusIn(function (v4) {
+                                      return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v3.value1)(true))(function () {
+                                          return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v1.value1)(v.messageHandler(v2.value0)))(function () {
+                                              return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.raise(token.outputToken)(Changed.create(v2.value0)))(function () {
+                                                  return Halogen_Hooks_HookM.raise(token.outputToken)(Focus.value);
+                                              });
+                                          });
+                                      });
+                                  }), Halogen_HTML_Events.onFocusOut(function (v4) {
+                                      return Halogen_Hooks_HookM.put(v3.value1)(false);
+                                  }) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("absolute right-0 top-0 bg-transparent rounded-bl-lg border-yukiRed b text-yukiRed hover:bg-yukiRed hover:text-white text-xl cursor-pointer px-2"), Halogen_HTML_Events.onClick(function (v4) {
+                                      return Halogen_Hooks_HookM.raise(token.outputToken)(Delete.value);
+                                  }) ])([ Halogen_HTML_Elements.i([ LogicWeb_Components_Common.css("fas fa-times") ])([  ]) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("absolute right-1 bottom-1 rounded-md text-base bg-yukiBlack text-white px-2 py-1 bg-opacity-50 " + (function () {
+                                      var $18 = v1.value0 === "";
+                                      if ($18) {
+                                          return "invisible";
+                                      };
+                                      return "visible";
+                                  })()) ])([ Halogen_HTML_Core.text(v1.value0) ]) ]));
+                              });
                           });
                       });
                   });
@@ -12436,8 +12474,186 @@ var PS = {};
   };
   exports["Changed"] = Changed;
   exports["Delete"] = Delete;
+  exports["Focus"] = Focus;
   exports["GetValue"] = GetValue;
   exports["SetValue"] = SetValue;
+  exports["component"] = component;
+})(PS);
+(function($PS) {
+  // Generated by purs version 0.14.5
+  "use strict";
+  $PS["LogicWeb.Components.InputsList"] = $PS["LogicWeb.Components.InputsList"] || {};
+  var exports = $PS["LogicWeb.Components.InputsList"];
+  var Control_Applicative = $PS["Control.Applicative"];
+  var Control_Bind = $PS["Control.Bind"];
+  var Data_Array = $PS["Data.Array"];
+  var Data_Eq = $PS["Data.Eq"];
+  var Data_Foldable = $PS["Data.Foldable"];
+  var Data_FoldableWithIndex = $PS["Data.FoldableWithIndex"];
+  var Data_Function = $PS["Data.Function"];
+  var Data_Functor = $PS["Data.Functor"];
+  var Data_Maybe = $PS["Data.Maybe"];
+  var Data_Ord = $PS["Data.Ord"];
+  var Data_Semigroup = $PS["Data.Semigroup"];
+  var Data_Show = $PS["Data.Show"];
+  var Data_Traversable = $PS["Data.Traversable"];
+  var Halogen_HTML = $PS["Halogen.HTML"];
+  var Halogen_HTML_Elements = $PS["Halogen.HTML.Elements"];
+  var Halogen_Hooks = $PS["Halogen.Hooks"];
+  var Halogen_Hooks_Component = $PS["Halogen.Hooks.Component"];
+  var Halogen_Hooks_Hook = $PS["Halogen.Hooks.Hook"];
+  var Halogen_Hooks_HookM = $PS["Halogen.Hooks.HookM"];
+  var LogicWeb_Common = $PS["LogicWeb.Common"];
+  var LogicWeb_Components_Common = $PS["LogicWeb.Components.Common"];
+  var LogicWeb_Components_HTML_RootButton = $PS["LogicWeb.Components.HTML.RootButton"];
+  var LogicWeb_Components_Input = $PS["LogicWeb.Components.Input"];
+  var Type_Proxy = $PS["Type.Proxy"];                
+  var GetValues = (function () {
+      function GetValues(value0) {
+          this.value0 = value0;
+      };
+      GetValues.create = function (value0) {
+          return new GetValues(value0);
+      };
+      return GetValues;
+  })();
+  var SetValues = (function () {
+      function SetValues(value0, value1) {
+          this.value0 = value0;
+          this.value1 = value1;
+      };
+      SetValues.create = function (value0) {
+          return function (value1) {
+              return new SetValues(value0, value1);
+          };
+      };
+      return SetValues;
+  })();
+  var Changed = (function () {
+      function Changed(value0, value1) {
+          this.value0 = value0;
+          this.value1 = value1;
+      };
+      Changed.create = function (value0) {
+          return function (value1) {
+              return new Changed(value0, value1);
+          };
+      };
+      return Changed;
+  })();
+  var Focus = (function () {
+      function Focus(value0) {
+          this.value0 = value0;
+      };
+      Focus.create = function (value0) {
+          return new Focus(value0);
+      };
+      return Focus;
+  })();
+  var Delete = (function () {
+      function Delete(value0) {
+          this.value0 = value0;
+      };
+      Delete.create = function (value0) {
+          return new Delete(value0);
+      };
+      return Delete;
+  })();
+  var Add = (function () {
+      function Add() {
+
+      };
+      Add.value = new Add();
+      return Add;
+  })();
+  var input_ = Type_Proxy["Proxy"].value;
+  var component = function (dictMonadEffect) {
+      return Halogen_Hooks_Component.component(function (v) {
+          return function (v1) {
+              return Halogen_Hooks_Hook.bind(Halogen_Hooks.useState([  ]))(function (v2) {
+                  return Halogen_Hooks_Hook.discard(Halogen_Hooks.useQuery(v.queryToken)(function (v3) {
+                      if (v3 instanceof GetValues) {
+                          return Control_Bind.bind(Halogen_Hooks_HookM.bindHookM)(Data_Functor.map(Halogen_Hooks_HookM.functorHookM)(Data_Traversable.sequence(Data_Traversable.traversableArray)(Data_Maybe.applicativeMaybe))(Data_Traversable["for"](Halogen_Hooks_HookM.applicativeHookM)(Data_Traversable.traversableArray)(v2.value0)(function (id) {
+                              return Halogen_Hooks_HookM.request()({
+                                  reflectSymbol: function () {
+                                      return "input";
+                                  }
+                              })(Data_Ord.ordInt)(v.slotToken)(input_)(id)(LogicWeb_Components_Input.GetValue.create);
+                          })))(function (res) {
+                              return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Functor.map(Data_Maybe.functorMaybe)(v3.value0)(res));
+                          });
+                      };
+                      if (v3 instanceof SetValues) {
+                          return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(LogicWeb_Common.upRange(0)(Data_Array.length(v3.value0) - 1 | 0)))(function () {
+                              return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Data_FoldableWithIndex.forWithIndex_(Halogen_Hooks_HookM.applicativeHookM)(Data_FoldableWithIndex.foldableWithIndexArray)(v3.value0)(function (i) {
+                                  return function (str) {
+                                      return Halogen_Hooks_HookM.tell()({
+                                          reflectSymbol: function () {
+                                              return "input";
+                                          }
+                                      })(Data_Ord.ordInt)(v.slotToken)(input_)(i)(LogicWeb_Components_Input.SetValue.create(str));
+                                  };
+                              }))(function () {
+                                  return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Maybe.Just.create(v3.value1));
+                              });
+                          });
+                      };
+                      throw new Error("Failed pattern match at LogicWeb.Components.InputsList (line 33, column 29 - line 40, column 22): " + [ v3.constructor.name ]);
+                  }))(function () {
+                      var handleChangedInput = function (i) {
+                          return function (v3) {
+                              if (v3 instanceof LogicWeb_Components_Input.Changed) {
+                                  return Halogen_Hooks_HookM.raise(v.outputToken)(new Changed(i, v3.value0));
+                              };
+                              if (v3 instanceof LogicWeb_Components_Input.Delete) {
+                                  return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(Data_Maybe.fromMaybe(v2.value0)(Data_Array.deleteAt(i)(v2.value0))))(function () {
+                                      return Halogen_Hooks_HookM.raise(v.outputToken)(new Delete(i));
+                                  });
+                              };
+                              if (v3 instanceof LogicWeb_Components_Input.Focus) {
+                                  return Halogen_Hooks_HookM.raise(v.outputToken)(new Focus(i));
+                              };
+                              throw new Error("Failed pattern match at LogicWeb.Components.InputsList (line 43, column 28 - line 48, column 55): " + [ v3.constructor.name ]);
+                          };
+                      };
+                      return Halogen_Hooks_Hook.pure(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-col overflow-auto relative") ])(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Function.flip(Data_Array.mapWithIndex)(v2.value0)(function (i) {
+                          return function (id) {
+                              return Halogen_HTML.slot()({
+                                  reflectSymbol: function () {
+                                      return "input";
+                                  }
+                              })(Data_Ord.ordInt)(input_)(id)(LogicWeb_Components_Input.component(dictMonadEffect))({
+                                  name: Data_Show.show(Data_Show.showInt)(i),
+                                  messageHandler: v1.messageHandler
+                              })(handleChangedInput(i));
+                          };
+                      }))([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-12 w-16 m-3") ])([ LogicWeb_Components_HTML_RootButton.button([ Halogen_HTML_Elements.i([ LogicWeb_Components_Common.css("fas fa-plus") ])([  ]) ])(function (v3) {
+                          return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)((function () {
+                              var v4 = Control_Bind.bindFlipped(Data_Maybe.bindMaybe)(function (m) {
+                                  return Data_Array.find(Data_Function.flip(Data_Array.notElem(Data_Eq.eqInt))(v2.value0))(LogicWeb_Common.upRange(0)(m + 1 | 0));
+                              })(Data_Foldable.maximum(Data_Ord.ordInt)(Data_Foldable.foldableArray)(v2.value0));
+                              if (v4 instanceof Data_Maybe.Just) {
+                                  return Data_Semigroup.append(Data_Semigroup.semigroupArray)(v2.value0)([ v4.value0 ]);
+                              };
+                              if (v4 instanceof Data_Maybe.Nothing) {
+                                  return [ 0 ];
+                              };
+                              throw new Error("Failed pattern match at LogicWeb.Components.InputsList (line 59, column 13 - line 61, column 29): " + [ v4.constructor.name ]);
+                          })()))(function () {
+                              return Halogen_Hooks_HookM.raise(v.outputToken)(Add.value);
+                          });
+                      }) ]) ])));
+                  });
+              });
+          };
+      });
+  };
+  exports["Changed"] = Changed;
+  exports["Focus"] = Focus;
+  exports["Delete"] = Delete;
+  exports["Add"] = Add;
+  exports["GetValues"] = GetValues;
+  exports["SetValues"] = SetValues;
   exports["component"] = component;
 })(PS);
 (function($PS) {
@@ -12783,18 +12999,12 @@ var PS = {};
   var Control_Applicative = $PS["Control.Applicative"];
   var Control_Bind = $PS["Control.Bind"];
   var Control_Monad_Trans_Class = $PS["Control.Monad.Trans.Class"];
-  var Data_Array = $PS["Data.Array"];
   var Data_Either = $PS["Data.Either"];
   var Data_Eq = $PS["Data.Eq"];
-  var Data_Foldable = $PS["Data.Foldable"];
-  var Data_FoldableWithIndex = $PS["Data.FoldableWithIndex"];
-  var Data_Function = $PS["Data.Function"];
   var Data_Functor = $PS["Data.Functor"];
   var Data_Maybe = $PS["Data.Maybe"];
   var Data_Ord = $PS["Data.Ord"];
-  var Data_Semigroup = $PS["Data.Semigroup"];
-  var Data_Show = $PS["Data.Show"];
-  var Data_Traversable = $PS["Data.Traversable"];
+  var Data_Unit = $PS["Data.Unit"];
   var Halogen_HTML = $PS["Halogen.HTML"];
   var Halogen_HTML_Elements = $PS["Halogen.HTML.Elements"];
   var Halogen_Hooks = $PS["Halogen.Hooks"];
@@ -12804,137 +13014,104 @@ var PS = {};
   var Halogen_Store_Monad = $PS["Halogen.Store.Monad"];
   var Halogen_Store_Select = $PS["Halogen.Store.Select"];
   var Halogen_Store_UseSelector = $PS["Halogen.Store.UseSelector"];
-  var LogicWeb_Common = $PS["LogicWeb.Common"];
   var LogicWeb_Components_Common = $PS["LogicWeb.Components.Common"];
-  var LogicWeb_Components_HTML_RootButton = $PS["LogicWeb.Components.HTML.RootButton"];
   var LogicWeb_Components_HTML_TruthTable = $PS["LogicWeb.Components.HTML.TruthTable"];
-  var LogicWeb_Components_Input = $PS["LogicWeb.Components.Input"];
+  var LogicWeb_Components_InputsList = $PS["LogicWeb.Components.InputsList"];
   var LogicWeb_PropositionalLogic = $PS["LogicWeb.PropositionalLogic"];
   var LogicWeb_PropositionalLogic_Formula_Parser = $PS["LogicWeb.PropositionalLogic.Formula.Parser"];
   var LogicWeb_PropositionalLogic_Formula_Primitive = $PS["LogicWeb.PropositionalLogic.Formula.Primitive"];
   var LogicWeb_PropositionalLogic_TruthTable = $PS["LogicWeb.PropositionalLogic.TruthTable"];
   var LogicWeb_Store = $PS["LogicWeb.Store"];
   var Type_Proxy = $PS["Type.Proxy"];                
-  var formulaInput_ = Type_Proxy["Proxy"].value;
+  var inputsList_ = Type_Proxy["Proxy"].value;
   var component = function (dictMonadStore) {
       return function (dictMonadEffect) {
           return Halogen_Hooks_Component.component(function (token) {
               return function (v) {
                   return Halogen_Hooks_Hook.bind(Halogen_Hooks.useState(LogicWeb_PropositionalLogic_TruthTable.emptyTruthTable))(function (v1) {
-                      return Halogen_Hooks_Hook.bind(Halogen_Hooks.useState([  ]))(function (v2) {
-                          return Halogen_Hooks_Hook.bind(Halogen_Store_UseSelector.useSelector(dictMonadStore)(Halogen_Store_Select.selectEq(Data_Eq.eqArray(Data_Eq.eqString))(function (v3) {
-                              return v3.formulas;
-                          })))(function (formulas) {
-                              var saveData = Control_Bind.bind(Halogen_Hooks_HookM.bindHookM)(Data_Traversable["for"](Halogen_Hooks_HookM.applicativeHookM)(Data_Traversable.traversableArray)(v2.value0)(function (id) {
-                                  return Halogen_Hooks_HookM.request()({
-                                      reflectSymbol: function () {
-                                          return "formulaInput";
-                                      }
-                                  })(Data_Ord.ordInt)(token.slotToken)(formulaInput_)(id)(LogicWeb_Components_Input.GetValue.create);
-                              }))(function (xs) {
-                                  return Control_Monad_Trans_Class.lift(Halogen_Hooks_HookM.monadTransHookM)(dictMonadEffect.Monad0())(Halogen_Store_Monad.updateStore(dictMonadStore)(LogicWeb_Store.SetFormulas.create(Data_Array.catMaybes(xs))));
-                              });
-                              var messageHandler = function (s) {
-                                  var v3 = LogicWeb_PropositionalLogic_Formula_Parser.parse(LogicWeb_PropositionalLogic_Formula_Primitive.primEnv)(s);
-                                  if (v3 instanceof Data_Either.Right) {
-                                      return "";
-                                  };
-                                  if (v3 instanceof Data_Either.Left && (v3.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.BadRequest && v3.value0.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.Inconsistencies)) {
-                                      return "\u5165\u529b\u306b\u4e0d\u6574\u5408\u304c\u3042\u308a\u307e\u3059";
-                                  };
-                                  if (v3 instanceof Data_Either.Left && v3.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.InternalError) {
-                                      return "\u5185\u90e8\u30a8\u30e9\u30fc: " + v3.value0.value0;
-                                  };
-                                  if (v3 instanceof Data_Either.Left && (v3.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.BadRequest && v3.value0.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.DuplicatedToken)) {
-                                      return "\u5165\u529b\u306b\u4e0d\u6574\u5408\u304c\u3042\u308a\u307e\u3059: " + v3.value0.value0.value0;
-                                  };
-                                  if (v3 instanceof Data_Either.Left && (v3.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.BadRequest && v3.value0.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.NoSuchToken)) {
-                                      return "\u30c8\u30fc\u30af\u30f3\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093: " + v3.value0.value0.value0;
-                                  };
-                                  if (v3 instanceof Data_Either.Left && (v3.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.BadRequest && v3.value0.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.EmptyRequest)) {
-                                      return "";
-                                  };
-                                  throw new Error("Failed pattern match at LogicWeb.Components.Pages.FormulaEditor (line 46, column 24 - line 52, column 43): " + [ v3.constructor.name ]);
+                      return Halogen_Hooks_Hook.bind(Halogen_Store_UseSelector.useSelector(dictMonadStore)(Halogen_Store_Select.selectEq(Data_Eq.eqArray(Data_Eq.eqString))(function (v2) {
+                          return v2.formulas;
+                      })))(function (formulas) {
+                          var saveData = Control_Bind.bind(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.request()({
+                              reflectSymbol: function () {
+                                  return "inputsList_";
+                              }
+                          })(Data_Ord.ordUnit)(token.slotToken)(inputsList_)(Data_Unit.unit)(LogicWeb_Components_InputsList.GetValues.create))(function (xs) {
+                              return Control_Monad_Trans_Class.lift(Halogen_Hooks_HookM.monadTransHookM)(dictMonadEffect.Monad0())(Halogen_Store_Monad.updateStore(dictMonadStore)(LogicWeb_Store.SetFormulas.create(Data_Maybe.fromMaybe([  ])(xs))));
+                          });
+                          var messageHandler = function (s) {
+                              var v2 = LogicWeb_PropositionalLogic_Formula_Parser.parse(LogicWeb_PropositionalLogic_Formula_Primitive.primEnv)(s);
+                              if (v2 instanceof Data_Either.Right) {
+                                  return "";
                               };
-                              var loadData = Control_Bind.bind(Halogen_Hooks_HookM.bindHookM)(Data_Functor.map(Halogen_Hooks_HookM.functorHookM)(function (v3) {
-                                  return v3.formulas;
-                              })(Halogen_Store_Monad.getStore(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))))(function (xs) {
-                                  return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(LogicWeb_Common.upRange(0)(Data_Array.length(xs) - 1 | 0)))(function () {
-                                      return Data_FoldableWithIndex.forWithIndex_(Halogen_Hooks_HookM.applicativeHookM)(Data_FoldableWithIndex.foldableWithIndexArray)(xs)(function (i) {
-                                          return function (str) {
-                                              return Halogen_Hooks_HookM.tell()({
-                                                  reflectSymbol: function () {
-                                                      return "formulaInput";
-                                                  }
-                                              })(Data_Ord.ordInt)(token.slotToken)(formulaInput_)(i)(LogicWeb_Components_Input.SetValue.create(str));
-                                          };
+                              if (v2 instanceof Data_Either.Left && (v2.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.BadRequest && v2.value0.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.Inconsistencies)) {
+                                  return "\u5165\u529b\u306b\u4e0d\u6574\u5408\u304c\u3042\u308a\u307e\u3059";
+                              };
+                              if (v2 instanceof Data_Either.Left && v2.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.InternalError) {
+                                  return "\u5185\u90e8\u30a8\u30e9\u30fc: " + v2.value0.value0;
+                              };
+                              if (v2 instanceof Data_Either.Left && (v2.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.BadRequest && v2.value0.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.DuplicatedToken)) {
+                                  return "\u5165\u529b\u306b\u4e0d\u6574\u5408\u304c\u3042\u308a\u307e\u3059: " + v2.value0.value0.value0;
+                              };
+                              if (v2 instanceof Data_Either.Left && (v2.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.BadRequest && v2.value0.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.NoSuchToken)) {
+                                  return "\u30c8\u30fc\u30af\u30f3\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093: " + v2.value0.value0.value0;
+                              };
+                              if (v2 instanceof Data_Either.Left && (v2.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.BadRequest && v2.value0.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.EmptyRequest)) {
+                                  return "";
+                              };
+                              throw new Error("Failed pattern match at LogicWeb.Components.Pages.FormulaEditor (line 38, column 24 - line 44, column 43): " + [ v2.constructor.name ]);
+                          };
+                          var loadData = Control_Bind.bind(Halogen_Hooks_HookM.bindHookM)(Data_Functor.map(Halogen_Hooks_HookM.functorHookM)(function (v2) {
+                              return v2.formulas;
+                          })(Halogen_Store_Monad.getStore(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))))(function (xs) {
+                              return Halogen_Hooks_HookM.tell()({
+                                  reflectSymbol: function () {
+                                      return "inputsList_";
+                                  }
+                              })(Data_Ord.ordUnit)(token.slotToken)(inputsList_)(Data_Unit.unit)(LogicWeb_Components_InputsList.SetValues.create(xs));
+                          });
+                          var handleChangedInputs = function (v2) {
+                              if (v2 instanceof LogicWeb_Components_InputsList.Changed) {
+                                  return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)((function () {
+                                      var v3 = LogicWeb_PropositionalLogic_Formula_Parser.parse(LogicWeb_PropositionalLogic_Formula_Primitive.primEnv)(v2.value1);
+                                      if (v3 instanceof Data_Either.Right) {
+                                          return Halogen_Hooks_HookM.put(v1.value1)(LogicWeb_PropositionalLogic.toTruthTable(LogicWeb_PropositionalLogic.propositionalLogicFormula)(v3.value0));
+                                      };
+                                      if (v3 instanceof Data_Either.Left && (v3.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.BadRequest && v3.value0.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.EmptyRequest)) {
+                                          return Halogen_Hooks_HookM.put(v1.value1)(LogicWeb_PropositionalLogic_TruthTable.emptyTruthTable);
+                                      };
+                                      return Halogen_Hooks_HookM.put(v1.value1)(LogicWeb_PropositionalLogic_TruthTable.emptyTruthTable);
+                                  })())(function () {
+                                      return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(saveData)(function () {
+                                          return LogicWeb_Store.save(Halogen_Hooks_HookM.monadEffectHookM(dictMonadEffect))(Halogen_Store_Monad.monadStoreHookM(dictMonadStore));
                                       });
                                   });
-                              });
-                              var handleChangedFormula = function (id) {
-                                  return function (v3) {
-                                      if (v3 instanceof LogicWeb_Components_Input.Changed) {
-                                          return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)((function () {
-                                              var v4 = LogicWeb_PropositionalLogic_Formula_Parser.parse(LogicWeb_PropositionalLogic_Formula_Primitive.primEnv)(v3.value0);
-                                              if (v4 instanceof Data_Either.Right) {
-                                                  return Halogen_Hooks_HookM.put(v1.value1)(LogicWeb_PropositionalLogic.toTruthTable(LogicWeb_PropositionalLogic.propositionalLogicFormula)(v4.value0));
-                                              };
-                                              if (v4 instanceof Data_Either.Left && (v4.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.BadRequest && v4.value0.value0 instanceof LogicWeb_PropositionalLogic_Formula_Parser.EmptyRequest)) {
-                                                  return Halogen_Hooks_HookM.put(v1.value1)(LogicWeb_PropositionalLogic_TruthTable.emptyTruthTable);
-                                              };
-                                              return Halogen_Hooks_HookM.put(v1.value1)(LogicWeb_PropositionalLogic_TruthTable.emptyTruthTable);
-                                          })())(function () {
-                                              return saveData;
-                                          });
-                                      };
-                                      if (v3 instanceof LogicWeb_Components_Input.Delete) {
-                                          return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(Data_Array["delete"](Data_Eq.eqInt)(id)(v2.value0)))(function () {
-                                              return saveData;
-                                          });
-                                      };
-                                      throw new Error("Failed pattern match at LogicWeb.Components.Pages.FormulaEditor (line 53, column 31 - line 62, column 17): " + [ v3.constructor.name ]);
-                                  };
                               };
-                              return Halogen_Hooks_Hook.discard(Halogen_Hooks.useLifecycleEffect(Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(LogicWeb_Store.load(Halogen_Hooks_HookM.monadEffectHookM(dictMonadEffect))(Halogen_Store_Monad.monadStoreHookM(dictMonadStore)))(function () {
-                                  return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(loadData)(function () {
-                                      return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Maybe.Just.create(LogicWeb_Store.save(Halogen_Hooks_HookM.monadEffectHookM(dictMonadEffect))(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))));
-                                  });
+                              return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(saveData)(function () {
+                                  return LogicWeb_Store.save(Halogen_Hooks_HookM.monadEffectHookM(dictMonadEffect))(Halogen_Store_Monad.monadStoreHookM(dictMonadStore));
+                              });
+                          };
+                          return Halogen_Hooks_Hook.discard(Halogen_Hooks.useLifecycleEffect(Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(LogicWeb_Store.load(Halogen_Hooks_HookM.monadEffectHookM(dictMonadEffect))(Halogen_Store_Monad.monadStoreHookM(dictMonadStore)))(function () {
+                              return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(loadData)(function () {
+                                  return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Maybe.Just.create(LogicWeb_Store.save(Halogen_Hooks_HookM.monadEffectHookM(dictMonadEffect))(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))));
+                              });
+                          })))(function () {
+                              return Halogen_Hooks_Hook.discard(Halogen_Hooks.captures(Data_Eq.eqRec()(Data_Eq.eqRowCons(Data_Eq.eqRowNil)()({
+                                  reflectSymbol: function () {
+                                      return "formulas";
+                                  }
+                              })(Data_Maybe.eqMaybe(Data_Eq.eqArray(Data_Eq.eqString)))))({
+                                  formulas: formulas
+                              })(Halogen_Hooks.useTickEffect)(Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(loadData)(function () {
+                                  return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Maybe.Nothing.value);
                               })))(function () {
-                                  return Halogen_Hooks_Hook.discard(Halogen_Hooks.captures(Data_Eq.eqRec()(Data_Eq.eqRowCons(Data_Eq.eqRowNil)()({
+                                  return Halogen_Hooks_Hook.pure(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-row h-full relative animate-fade-in-quick") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex-grow h-full bg-white shadow-md relative") ])([ Halogen_HTML.slot()({
                                       reflectSymbol: function () {
-                                          return "formulas";
+                                          return "inputsList_";
                                       }
-                                  })(Data_Maybe.eqMaybe(Data_Eq.eqArray(Data_Eq.eqString)))))({
-                                      formulas: formulas
-                                  })(Halogen_Hooks.useTickEffect)(Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(loadData)(function () {
-                                      return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Maybe.Nothing.value);
-                                  })))(function () {
-                                      return Halogen_Hooks_Hook.pure(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-row h-full relative animate-fade-in-quick") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-col flex-grow overflow-auto shadow-md relative z-30 bg-white") ])(Data_Semigroup.append(Data_Semigroup.semigroupArray)([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-12 w-16 m-6") ])([ LogicWeb_Components_HTML_RootButton.button([ Halogen_HTML_Elements.i([ LogicWeb_Components_Common.css("fas fa-plus") ])([  ]) ])(function (v3) {
-                                          var v4 = Control_Bind.bindFlipped(Data_Maybe.bindMaybe)(function (m) {
-                                              return Data_Array.find(Data_Function.flip(Data_Array.notElem(Data_Eq.eqInt))(v2.value0))(LogicWeb_Common.upRange(0)(m + 1 | 0));
-                                          })(Data_Foldable.maximum(Data_Ord.ordInt)(Data_Foldable.foldableArray)(v2.value0));
-                                          if (v4 instanceof Data_Maybe.Just) {
-                                              return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(loadData)(function () {
-                                                  return Halogen_Hooks_HookM.put(v2.value1)(Data_Semigroup.append(Data_Semigroup.semigroupArray)(v2.value0)([ v4.value0 ]));
-                                              });
-                                          };
-                                          if (v4 instanceof Data_Maybe.Nothing) {
-                                              return Halogen_Hooks_HookM.put(v2.value1)([ 0 ]);
-                                          };
-                                          throw new Error("Failed pattern match at LogicWeb.Components.Pages.FormulaEditor (line 83, column 54 - line 87, column 53): " + [ v4.constructor.name ]);
-                                      }) ]) ])(Data_Function.flip(Data_Array.mapWithIndex)(v2.value0)(function (i) {
-                                          return function (id) {
-                                              return Halogen_HTML.slot()({
-                                                  reflectSymbol: function () {
-                                                      return "formulaInput";
-                                                  }
-                                              })(Data_Ord.ordInt)(formulaInput_)(id)(LogicWeb_Components_Input.component(dictMonadEffect))({
-                                                  name: Data_Show.show(Data_Show.showInt)(i),
-                                                  messageHandler: messageHandler
-                                              })(handleChangedFormula(id));
-                                          };
-                                      }))), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("overflow-auto w-auto font-meiryo text-lg flex-col flex items-center p-3") ])([ LogicWeb_Components_HTML_TruthTable.displayTruthTable(dictMonadEffect.Monad0())(dictMonadStore)(v1.value0) ]) ]));
-                                  });
+                                  })(Data_Ord.ordUnit)(inputsList_)(Data_Unit.unit)(LogicWeb_Components_InputsList.component(dictMonadEffect))({
+                                      messageHandler: messageHandler
+                                  })(handleChangedInputs) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("overflow-auto w-auto font-meiryo text-lg flex-col flex items-center p-3") ])([ LogicWeb_Components_HTML_TruthTable.displayTruthTable(dictMonadEffect.Monad0())(dictMonadStore)(v1.value0) ]) ]));
                               });
                           });
                       });
@@ -12948,11 +13125,10 @@ var PS = {};
 (function($PS) {
   // Generated by purs version 0.14.5
   "use strict";
-  $PS["LogicWeb.Components.Pages.TruthTableEditor"] = $PS["LogicWeb.Components.Pages.TruthTableEditor"] || {};
-  var exports = $PS["LogicWeb.Components.Pages.TruthTableEditor"];
+  $PS["LogicWeb.Components.TruthTableEditPanel"] = $PS["LogicWeb.Components.TruthTableEditPanel"] || {};
+  var exports = $PS["LogicWeb.Components.TruthTableEditPanel"];
   var Control_Applicative = $PS["Control.Applicative"];
   var Control_Bind = $PS["Control.Bind"];
-  var Control_Monad_Trans_Class = $PS["Control.Monad.Trans.Class"];
   var Data_Array = $PS["Data.Array"];
   var Data_Eq = $PS["Data.Eq"];
   var Data_Foldable = $PS["Data.Foldable"];
@@ -12963,25 +13139,35 @@ var PS = {};
   var Data_Ord = $PS["Data.Ord"];
   var Data_Semigroup = $PS["Data.Semigroup"];
   var Data_Semiring = $PS["Data.Semiring"];
-  var Data_Show = $PS["Data.Show"];
   var Data_Traversable = $PS["Data.Traversable"];
+  var Data_Tuple = $PS["Data.Tuple"];
   var Data_Unfoldable = $PS["Data.Unfoldable"];
   var Data_Unit = $PS["Data.Unit"];
+  var Halogen_HTML = $PS["Halogen.HTML"];
   var Halogen_HTML_Core = $PS["Halogen.HTML.Core"];
   var Halogen_HTML_Elements = $PS["Halogen.HTML.Elements"];
   var Halogen_HTML_Events = $PS["Halogen.HTML.Events"];
-  var Halogen_HTML_Properties = $PS["Halogen.HTML.Properties"];
   var Halogen_Hooks = $PS["Halogen.Hooks"];
   var Halogen_Hooks_Component = $PS["Halogen.Hooks.Component"];
   var Halogen_Hooks_Hook = $PS["Halogen.Hooks.Hook"];
   var Halogen_Hooks_HookM = $PS["Halogen.Hooks.HookM"];
-  var Halogen_Store_Monad = $PS["Halogen.Store.Monad"];
+  var LogicWeb_Common = $PS["LogicWeb.Common"];
   var LogicWeb_Components_Common = $PS["LogicWeb.Components.Common"];
-  var LogicWeb_Components_HTML_RootButton = $PS["LogicWeb.Components.HTML.RootButton"];
   var LogicWeb_Components_HTML_TruthTable = $PS["LogicWeb.Components.HTML.TruthTable"];
-  var LogicWeb_Store = $PS["LogicWeb.Store"];                
+  var LogicWeb_Components_InputsList = $PS["LogicWeb.Components.InputsList"];
+  var Type_Proxy = $PS["Type.Proxy"];                
+  var Change = (function () {
+      function Change(value0) {
+          this.value0 = value0;
+      };
+      Change.create = function (value0) {
+          return new Change(value0);
+      };
+      return Change;
+  })();
+  var inputsList_ = Type_Proxy["Proxy"].value;
   var divButton = function (frag) {
-      return Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("w-full h-full flex justify-center items-center cursor-pointer") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-5 w-5 rounded-md " + (function () {
+      return Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("w-full h-full flex justify-center items-center p-1") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-6 w-6 border-yukiRed border-2 rounded-md " + (function () {
           if (frag) {
               return "bg-yukiRed";
           };
@@ -12990,58 +13176,51 @@ var PS = {};
   };
   var component = function (dictMonadStore) {
       return Halogen_Hooks_Component.component(function (v) {
-          return function (v1) {
-              return Halogen_Hooks_Hook.bind(Halogen_Hooks.useState(v1.variables))(function (v2) {
-                  return Halogen_Hooks_Hook.bind(Halogen_Hooks.useState(Data_Functor.map(Data_Functor.functorArray)(function (xs) {
-                      return Data_Maybe.fromMaybe(false)(v1.table(function (v3) {
-                          return Control_Bind.bindFlipped(Data_Maybe.bindMaybe)(Data_Array.index(xs))(Data_Array.findIndex(function (v4) {
-                              return v4 === v3;
-                          })(v1.variables));
-                      }));
-                  })(Data_Unfoldable.replicateA(Control_Applicative.applicativeArray)(Data_Unfoldable.unfoldableArray)(Data_Traversable.traversableArray)(Data_Array.length(v1.variables))([ false, true ]))))(function (v3) {
-                      return Halogen_Hooks_Hook.discard(Halogen_Hooks.useLifecycleEffect(Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(LogicWeb_Store.load(Halogen_Hooks_HookM.monadEffectHookM(dictMonadStore.MonadEffect0()))(Halogen_Store_Monad.monadStoreHookM(dictMonadStore)))(function () {
-                          return Control_Bind.bind(Halogen_Hooks_HookM.bindHookM)(Control_Monad_Trans_Class.lift(Halogen_Hooks_HookM.monadTransHookM)((dictMonadStore.MonadEffect0()).Monad0())(Halogen_Store_Monad.getStore(dictMonadStore)))(function (res) {
-                              var t = Data_Maybe.fromMaybe({
-                                  variables: [ "0" ],
-                                  results: [ false ]
-                              })(Data_Array.head(res.truthTables));
-                              return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(t.variables))(function () {
-                                  return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v3.value1)(t.results))(function () {
-                                      return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(new Data_Maybe.Just(LogicWeb_Store.save(Halogen_Hooks_HookM.monadEffectHookM(dictMonadStore.MonadEffect0()))(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))));
-                                  });
-                              });
-                          });
+          return function (inputRawTruthTable) {
+              return Halogen_Hooks_Hook.bind(Halogen_Hooks.useState(inputRawTruthTable.variables))(function (v1) {
+                  return Halogen_Hooks_Hook.bind(Halogen_Hooks.useState(inputRawTruthTable.results))(function (v2) {
+                      return Halogen_Hooks_Hook.discard(Halogen_Hooks.useLifecycleEffect(Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.tell()({
+                          reflectSymbol: function () {
+                              return "inputsList_";
+                          }
+                      })(Data_Ord.ordUnit)(v.slotToken)(inputsList_)(Data_Unit.unit)(LogicWeb_Components_InputsList.SetValues.create(v1.value0)))(function () {
+                          return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Maybe.Nothing.value);
                       })))(function () {
-                          var showBoolean = function (v4) {
-                              if (v4) {
-                                  return "1";
+                          var messageHandler = function (v3) {
+                              if (v3 === "") {
+                                  return "\u5909\u6570\u540d\u304c\u7a7a\u3067\u3059";
                               };
-                              return "0";
+                              if (Data_Array.length(Data_Array.filter(function (v4) {
+                                  return v4 === v3;
+                              })(v1.value0)) > 1) {
+                                  return "\u5909\u6570\u540d\u304c\u91cd\u8907\u3057\u3066\u3044\u307e\u3059";
+                              };
+                              return "";
                           };
                           var makeTruthTable = (function () {
-                              if (Data_Eq.eq(Data_Eq.eqArray(Data_Eq.eqString))(Data_Array.nub(Data_Ord.ordString)(v2.value0))(v2.value0)) {
+                              if (Data_Eq.eq(Data_Eq.eqArray(Data_Eq.eqString))(Data_Array.nub(Data_Ord.ordString)(v1.value0))(v1.value0) && Data_Array.notElem(Data_Eq.eqString)("")(v1.value0)) {
                                   return Data_Maybe.Just.create({
-                                      variables: v2.value0,
+                                      variables: v1.value0,
                                       output: "",
                                       table: function (f) {
-                                          return Control_Bind.bindFlipped(Data_Maybe.bindMaybe)(Data_Array.index(v3.value0))(Data_Functor.map(Data_Maybe.functorMaybe)((function () {
-                                              var $21 = Data_Foldable.sum(Data_Foldable.foldableArray)(Data_Semiring.semiringInt);
-                                              var $22 = Data_Array.mapWithIndex(function (i) {
+                                          return Control_Bind.bindFlipped(Data_Maybe.bindMaybe)(Data_Array.index(v2.value0))(Data_Functor.map(Data_Maybe.functorMaybe)((function () {
+                                              var $26 = Data_Foldable.sum(Data_Foldable.foldableArray)(Data_Semiring.semiringInt);
+                                              var $27 = Data_Array.mapWithIndex(function (i) {
                                                   return function (x) {
-                                                      return x * Data_Int.pow(2)((Data_Array.length(v2.value0) - i | 0) - 1 | 0) | 0;
+                                                      return x * Data_Int.pow(2)((Data_Array.length(v1.value0) - i | 0) - 1 | 0) | 0;
                                                   };
                                               });
-                                              return function ($23) {
-                                                  return $21($22($23));
+                                              return function ($28) {
+                                                  return $26($27($28));
                                               };
-                                          })())(Data_Traversable.sequence(Data_Traversable.traversableArray)(Data_Maybe.applicativeMaybe)(Data_Functor.map(Data_Functor.functorArray)(function (v4) {
-                                              return Data_Functor.map(Data_Maybe.functorMaybe)(function (v5) {
-                                                  if (v5) {
+                                          })())(Data_Traversable.sequence(Data_Traversable.traversableArray)(Data_Maybe.applicativeMaybe)(Data_Functor.map(Data_Functor.functorArray)(function (v3) {
+                                              return Data_Functor.map(Data_Maybe.functorMaybe)(function (v4) {
+                                                  if (v4) {
                                                       return 1;
                                                   };
                                                   return 0;
-                                              })(f(v4));
-                                          })(v2.value0))));
+                                              })(f(v3));
+                                          })(v1.value0))));
                                       }
                                   });
                               };
@@ -13050,54 +13229,221 @@ var PS = {};
                           var makeRow = function (i) {
                               return function (xs) {
                                   return Halogen_HTML_Elements.tr([ LogicWeb_Components_Common.css("font-sans h-10") ])(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Functor.map(Data_Functor.functorArray)((function () {
-                                      var $24 = Halogen_HTML_Elements.td([ LogicWeb_Components_Common.css("border-t px-3 border-yukiRed") ]);
-                                      return function ($25) {
-                                          return $24(Data_Array.singleton(Halogen_HTML_Core.text(showBoolean($25))));
+                                      var $29 = Halogen_HTML_Elements.td([ LogicWeb_Components_Common.css("border-t px-3 border-yukiRed") ]);
+                                      return function ($30) {
+                                          return $29(Data_Array.singleton(Halogen_HTML_Core.text(LogicWeb_Common.showBool($30))));
                                       };
-                                  })())(xs))([ Halogen_HTML_Elements.td([ LogicWeb_Components_Common.css("border-l-4 border-t border-yukiRed h-9 w-9"), Halogen_HTML_Events.onClick(function (v4) {
-                                      return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v3.value1)(Data_Maybe.fromMaybe(v3.value0)(Data_Array.modifyAt(i)(Data_HeytingAlgebra.not(Data_HeytingAlgebra.heytingAlgebraBoolean))(v3.value0))))(function () {
-                                          return Halogen_Store_Monad.updateStore(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))(new LogicWeb_Store.SetTruthTables([ {
-                                              variables: v2.value0,
-                                              results: v3.value0
-                                          } ]));
-                                      });
-                                  }) ])([ divButton(Data_Maybe.fromMaybe(false)(Data_Array.index(v3.value0)(i))) ]) ]));
+                                  })())(xs))([ Halogen_HTML_Elements.td([ LogicWeb_Components_Common.css("border-l-4 border-t border-yukiRed h-9 w-9 cursor-pointer"), Halogen_HTML_Events.onClick(function (v3) {
+                                      return Halogen_Hooks_HookM.put(v2.value1)(Data_Maybe.fromMaybe(v2.value0)(Data_Array.modifyAt(i)(Data_HeytingAlgebra.not(Data_HeytingAlgebra.heytingAlgebraBoolean))(v2.value0)));
+                                  }) ])([ divButton(Data_Maybe.fromMaybe(false)(Data_Array.index(v2.value0)(i))) ]) ]));
                               };
                           };
-                          return Halogen_Hooks_Hook.pure(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-full flex flex-row relative animate-fade-in-quick") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-col flex-grow overflow-auto shadow-md relative z-30 bg-white") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-12 w-16 m-6") ])([ LogicWeb_Components_HTML_RootButton.button([ Halogen_HTML_Elements.i([ LogicWeb_Components_Common.css("fas fa-plus") ])([  ]) ])(function (v4) {
-                              return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Unit.unit);
-                          }) ]) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("p-3 flex flex-row items-start") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-row flex-grow") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-col") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-col rounded-md bg-white shadow-md items-start") ])(Data_Semigroup.append(Data_Semigroup.semigroupArray)([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-12 w-auto m-3") ])([ LogicWeb_Components_HTML_RootButton.button([ Halogen_HTML_Core.text("\u5909\u6570\u8ffd\u52a0") ])(function (v4) {
-                              var vs = Data_Semigroup.append(Data_Semigroup.semigroupArray)(v2.value0)([ Data_Show.show(Data_Show.showInt)(Data_Array.length(v2.value0)) ]);
-                              var rs = Data_Array.concat(Data_Array.zipWith(function (x) {
-                                  return function (y) {
-                                      return [ x, y ];
+                          var handleChangeInputs = function (o) {
+                              var newResults = (function () {
+                                  if (o instanceof LogicWeb_Components_InputsList.Add) {
+                                      return Data_Array.concat(Data_Array.zipWith(function (x) {
+                                          return function (y) {
+                                              return [ x, y ];
+                                          };
+                                      })(v2.value0)(v2.value0));
                                   };
-                              })(v3.value0)(v3.value0));
-                              return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(vs))(function () {
-                                  return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v3.value1)(rs))(function () {
-                                      return Halogen_Store_Monad.updateStore(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))(LogicWeb_Store.SetTruthTables.create([ {
-                                          variables: vs,
-                                          results: rs
-                                      } ]));
+                                  if (o instanceof LogicWeb_Components_InputsList.Delete) {
+                                      return Data_Functor.map(Data_Functor.functorArray)(Data_Tuple.snd)(Data_Array.filter(function (v3) {
+                                          return Data_Eq.eq(Data_Maybe.eqMaybe(Data_Eq.eqBoolean))(Data_Array.index(v3.value0)(o.value0))(new Data_Maybe.Just(true));
+                                      })(Data_Array.zip(Data_Unfoldable.replicateA(Control_Applicative.applicativeArray)(Data_Unfoldable.unfoldableArray)(Data_Traversable.traversableArray)(Data_Array.length(v1.value0))([ false, true ]))(v2.value0)));
+                                  };
+                                  return v2.value0;
+                              })();
+                              return Control_Bind.bind(Halogen_Hooks_HookM.bindHookM)(Data_Functor.map(Halogen_Hooks_HookM.functorHookM)(Data_Maybe.fromMaybe([  ]))(Halogen_Hooks_HookM.request()({
+                                  reflectSymbol: function () {
+                                      return "inputsList_";
+                                  }
+                              })(Data_Ord.ordUnit)(v.slotToken)(inputsList_)(Data_Unit.unit)(LogicWeb_Components_InputsList.GetValues.create)))(function (res) {
+                                  return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v1.value1)(res))(function () {
+                                      return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(newResults))(function () {
+                                          return Halogen_Hooks_HookM.raise(v.outputToken)(new Change({
+                                              variables: res,
+                                              results: newResults,
+                                              name: inputRawTruthTable.name
+                                          }));
+                                      });
                                   });
                               });
-                          }) ]) ])(Data_Array.mapWithIndex(function (i) {
-                              return function (v4) {
-                                  return Halogen_HTML_Elements.input([ LogicWeb_Components_Common.css("text-lg w-80 p-3 border-b-2 mb-3 border-yukiRed outline-none"), Halogen_HTML_Properties.value(v4), Halogen_HTML_Events.onValueInput(function (s) {
-                                      return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(Data_Maybe.fromMaybe(v2.value0)(Data_Array.updateAt(i)(s)(v2.value0))))(function () {
-                                          return Halogen_Store_Monad.updateStore(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))(new LogicWeb_Store.SetTruthTables([ {
-                                              variables: v2.value0,
-                                              results: v3.value0
-                                          } ]));
+                          };
+                          return Halogen_Hooks_Hook.pure(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-full flex flex-row relative animate-fade-in-quick") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("p-3 flex flex-row items-start w-full") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-row flex-grow items-start") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-col") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("rounded-md bg-white shadow-md text-center text-lg w-72") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("m-3") ])([ Halogen_HTML_Core.text("\u5909\u6570") ]), Halogen_HTML.slot()({
+                              reflectSymbol: function () {
+                                  return "inputsList_";
+                              }
+                          })(Data_Ord.ordUnit)(inputsList_)(Data_Unit.unit)(LogicWeb_Components_InputsList.component(dictMonadStore.MonadEffect0()))({
+                              messageHandler: messageHandler
+                          })(handleChangeInputs) ]) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("shadow-md bg-white relative z-30 p-3 rounded-md flex flex-col items-center ml-3") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("mb-3 text-lg") ])([ Halogen_HTML_Core.text("\u771f\u7406\u5024") ]), Halogen_HTML_Elements.table([ LogicWeb_Components_Common.css("table-fixed text-xl border-collapse whitespace-nowrap tracking-wider") ])(Data_Semigroup.append(Data_Semigroup.semigroupArray)([ Halogen_HTML_Elements.tr([ LogicWeb_Components_Common.css("font-math h-10") ])(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Functor.map(Data_Functor.functorArray)((function () {
+                              var $31 = Halogen_HTML_Elements.th([ LogicWeb_Components_Common.css("border-b-4 px-3 border-yukiRed") ]);
+                              return function ($32) {
+                                  return $31(Data_Array.singleton(Halogen_HTML_Core.text($32)));
+                              };
+                          })())(v1.value0))([ Halogen_HTML_Elements.th([ LogicWeb_Components_Common.css("border-l-4 border-b-4 px-3 border-yukiRed") ])([  ]) ])) ])(Data_Array.mapWithIndex(makeRow)(Data_Unfoldable.replicateA(Control_Applicative.applicativeArray)(Data_Unfoldable.unfoldableArray)(Data_Traversable.traversableArray)(Data_Array.length(v1.value0))([ false, true ])))) ]) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("ml-3") ])([ Data_Maybe.fromMaybe(Halogen_HTML_Elements.div_([  ]))(Data_Functor.map(Data_Maybe.functorMaybe)(LogicWeb_Components_HTML_TruthTable.displayTruthTable((dictMonadStore.MonadEffect0()).Monad0())(dictMonadStore))(makeTruthTable)) ]) ]) ]));
+                      });
+                  });
+              });
+          };
+      });
+  };
+  exports["component"] = component;
+})(PS);
+(function($PS) {
+  // Generated by purs version 0.14.5
+  "use strict";
+  $PS["LogicWeb.Components.Pages.TruthTableEditor"] = $PS["LogicWeb.Components.Pages.TruthTableEditor"] || {};
+  var exports = $PS["LogicWeb.Components.Pages.TruthTableEditor"];
+  var Control_Applicative = $PS["Control.Applicative"];
+  var Control_Bind = $PS["Control.Bind"];
+  var Data_Array = $PS["Data.Array"];
+  var Data_Eq = $PS["Data.Eq"];
+  var Data_Function = $PS["Data.Function"];
+  var Data_Functor = $PS["Data.Functor"];
+  var Data_Maybe = $PS["Data.Maybe"];
+  var Data_Ord = $PS["Data.Ord"];
+  var Data_Unit = $PS["Data.Unit"];
+  var Halogen_HTML = $PS["Halogen.HTML"];
+  var Halogen_HTML_Elements = $PS["Halogen.HTML.Elements"];
+  var Halogen_Hooks = $PS["Halogen.Hooks"];
+  var Halogen_Hooks_Component = $PS["Halogen.Hooks.Component"];
+  var Halogen_Hooks_Hook = $PS["Halogen.Hooks.Hook"];
+  var Halogen_Hooks_HookM = $PS["Halogen.Hooks.HookM"];
+  var Halogen_Store_Monad = $PS["Halogen.Store.Monad"];
+  var Halogen_Store_Select = $PS["Halogen.Store.Select"];
+  var Halogen_Store_UseSelector = $PS["Halogen.Store.UseSelector"];
+  var LogicWeb_Components_Common = $PS["LogicWeb.Components.Common"];
+  var LogicWeb_Components_InputsList = $PS["LogicWeb.Components.InputsList"];
+  var LogicWeb_Components_TruthTableEditPanel = $PS["LogicWeb.Components.TruthTableEditPanel"];
+  var LogicWeb_Store = $PS["LogicWeb.Store"];
+  var LogicWeb_Type_RawTruthTable = $PS["LogicWeb.Type.RawTruthTable"];
+  var Type_Proxy = $PS["Type.Proxy"];                
+  var truthTableEditPanel_ = Type_Proxy["Proxy"].value;
+  var inputsList_ = Type_Proxy["Proxy"].value;
+  var component = function (dictMonadStore) {
+      return Halogen_Hooks_Component.component(function (v) {
+          return function (v1) {
+              return Halogen_Hooks_Hook.bind(Halogen_Store_UseSelector.useSelector(dictMonadStore)(Halogen_Store_Select.selectEq(Data_Eq.eqArray(Data_Eq.eqRec()(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowNil)()({
+                  reflectSymbol: function () {
+                      return "variables";
+                  }
+              })(Data_Eq.eqArray(Data_Eq.eqString)))()({
+                  reflectSymbol: function () {
+                      return "results";
+                  }
+              })(Data_Eq.eqArray(Data_Eq.eqBoolean)))()({
+                  reflectSymbol: function () {
+                      return "name";
+                  }
+              })(Data_Eq.eqString))))(function (v2) {
+                  return v2.truthTables;
+              })))(function (storeSelector) {
+                  return Halogen_Hooks_Hook.bind(Halogen_Hooks.useState([  ]))(function (v2) {
+                      return Halogen_Hooks_Hook.bind(Halogen_Hooks.useState(0))(function (v3) {
+                          return Halogen_Hooks_Hook.discard(Halogen_Hooks.captures(Data_Eq.eqRec()(Data_Eq.eqRowCons(Data_Eq.eqRowNil)()({
+                              reflectSymbol: function () {
+                                  return "storeSelector";
+                              }
+                          })(Data_Maybe.eqMaybe(Data_Eq.eqArray(Data_Eq.eqRec()(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowCons(Data_Eq.eqRowNil)()({
+                              reflectSymbol: function () {
+                                  return "variables";
+                              }
+                          })(Data_Eq.eqArray(Data_Eq.eqString)))()({
+                              reflectSymbol: function () {
+                                  return "results";
+                              }
+                          })(Data_Eq.eqArray(Data_Eq.eqBoolean)))()({
+                              reflectSymbol: function () {
+                                  return "name";
+                              }
+                          })(Data_Eq.eqString)))))))({
+                              storeSelector: storeSelector
+                          })(Halogen_Hooks.useTickEffect)(Control_Bind.bind(Halogen_Hooks_HookM.bindHookM)(Data_Functor.map(Halogen_Hooks_HookM.functorHookM)(function (v4) {
+                              return v4.truthTables;
+                          })(Halogen_Store_Monad.getStore(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))))(function (res) {
+                              return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(res))(function () {
+                                  return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.tell()({
+                                      reflectSymbol: function () {
+                                          return "inputsList";
+                                      }
+                                  })(Data_Ord.ordUnit)(v.slotToken)(inputsList_)(Data_Unit.unit)(LogicWeb_Components_InputsList.SetValues.create(Data_Functor.map(Data_Functor.functorArray)(function (v4) {
+                                      return v4.name;
+                                  })(res))))(function () {
+                                      return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Maybe.Nothing.value);
+                                  });
+                              });
+                          })))(function () {
+                              return Halogen_Hooks_Hook.discard(Halogen_Hooks.useLifecycleEffect(Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(LogicWeb_Store.load(Halogen_Hooks_HookM.monadEffectHookM(dictMonadStore.MonadEffect0()))(Halogen_Store_Monad.monadStoreHookM(dictMonadStore)))(function () {
+                                  return Control_Bind.bind(Halogen_Hooks_HookM.bindHookM)(Data_Functor.map(Halogen_Hooks_HookM.functorHookM)(function (v4) {
+                                      return v4.truthTables;
+                                  })(Halogen_Store_Monad.getStore(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))))(function (res) {
+                                      return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(res))(function () {
+                                          return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.tell()({
+                                              reflectSymbol: function () {
+                                                  return "inputsList";
+                                              }
+                                          })(Data_Ord.ordUnit)(v.slotToken)(inputsList_)(Data_Unit.unit)(LogicWeb_Components_InputsList.SetValues.create(Data_Functor.map(Data_Functor.functorArray)(function (v4) {
+                                              return v4.name;
+                                          })(res))))(function () {
+                                              return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(new Data_Maybe.Just(LogicWeb_Store.save(Halogen_Hooks_HookM.monadEffectHookM(dictMonadStore.MonadEffect0()))(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))));
+                                          });
                                       });
-                                  }) ]);
-                              };
-                          })(v2.value0))) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("shadow-md bg-white relative z-30 p-3 rounded-md flex flex-col items-center ml-3") ])([ Halogen_HTML_Elements.table([ LogicWeb_Components_Common.css("table-fixed text-xl border-collapse whitespace-nowrap tracking-wider") ])(Data_Semigroup.append(Data_Semigroup.semigroupArray)([ Halogen_HTML_Elements.tr([ LogicWeb_Components_Common.css("font-math h-10") ])(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Functor.map(Data_Functor.functorArray)((function () {
-                              var $26 = Halogen_HTML_Elements.th([ LogicWeb_Components_Common.css("border-b-4 px-3 border-yukiRed") ]);
-                              return function ($27) {
-                                  return $26(Data_Array.singleton(Halogen_HTML_Core.text($27)));
-                              };
-                          })())(v2.value0))([ Halogen_HTML_Elements.th([ LogicWeb_Components_Common.css("border-l-4 border-b-4 px-3 border-yukiRed") ])([  ]) ])) ])(Data_Array.mapWithIndex(makeRow)(Data_Unfoldable.replicateA(Control_Applicative.applicativeArray)(Data_Unfoldable.unfoldableArray)(Data_Traversable.traversableArray)(Data_Array.length(v2.value0))([ false, true ])))) ]) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("ml-3") ])([ Data_Maybe.fromMaybe(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("p-3 bg-white") ])([ Halogen_HTML_Core.text("\u5909\u6570\u540d\u304c\u91cd\u8907\u3057\u3066\u3044\u307e\u3059") ]))(Data_Functor.map(Data_Maybe.functorMaybe)(LogicWeb_Components_HTML_TruthTable.displayTruthTable((dictMonadStore.MonadEffect0()).Monad0())(dictMonadStore))(makeTruthTable)) ]) ]) ]));
+                                  });
+                              })))(function () {
+                                  var messageHandler = Data_Function["const"]("");
+                                  var handleTableEditOutput = function (o) {
+                                      return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Store_Monad.updateStore(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))(LogicWeb_Store.SetTruthTables.create(Data_Maybe.fromMaybe(v2.value0)(Data_Array.updateAt(v3.value0)(o.value0)(v2.value0)))))(function () {
+                                          return LogicWeb_Store.save(Halogen_Hooks_HookM.monadEffectHookM(dictMonadStore.MonadEffect0()))(Halogen_Store_Monad.monadStoreHookM(dictMonadStore));
+                                      });
+                                  };
+                                  var handleInputsOutput = function (o) {
+                                      return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)((function () {
+                                          if (o instanceof LogicWeb_Components_InputsList.Focus) {
+                                              return Halogen_Hooks_HookM.put(v3.value1)(o.value0);
+                                          };
+                                          if (o instanceof LogicWeb_Components_InputsList.Delete) {
+                                              return Halogen_Store_Monad.updateStore(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))(LogicWeb_Store.SetTruthTables.create(Data_Maybe.fromMaybe(v2.value0)(Data_Array.deleteAt(o.value0)(v2.value0))));
+                                          };
+                                          if (o instanceof LogicWeb_Components_InputsList.Add) {
+                                              return Halogen_Store_Monad.updateStore(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))(LogicWeb_Store.SetTruthTables.create(Data_Array.snoc(v2.value0)(LogicWeb_Type_RawTruthTable.emptyRawTruthTable)));
+                                          };
+                                          if (o instanceof LogicWeb_Components_InputsList.Changed) {
+                                              return Halogen_Store_Monad.updateStore(Halogen_Store_Monad.monadStoreHookM(dictMonadStore))(LogicWeb_Store.SetTruthTables.create(Data_Maybe.fromMaybe(v2.value0)(Data_Array.modifyAt(o.value0)(function (t) {
+                                                  return {
+                                                      name: o.value1,
+                                                      results: t.results,
+                                                      variables: t.variables
+                                                  };
+                                              })(v2.value0))));
+                                          };
+                                          throw new Error("Failed pattern match at LogicWeb.Components.Pages.TruthTableEditor (line 61, column 7 - line 68, column 116): " + [ o.constructor.name ]);
+                                      })())(function () {
+                                          return LogicWeb_Store.save(Halogen_Hooks_HookM.monadEffectHookM(dictMonadStore.MonadEffect0()))(Halogen_Store_Monad.monadStoreHookM(dictMonadStore));
+                                      });
+                                  };
+                                  return Halogen_Hooks_Hook.pure(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-full flex flex-row relative animate-fade-in-quick") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-full bg-white shadow-md relative w-[480px]") ])([ Halogen_HTML.slot()({
+                                      reflectSymbol: function () {
+                                          return "inputsList";
+                                      }
+                                  })(Data_Ord.ordUnit)(inputsList_)(Data_Unit.unit)(LogicWeb_Components_InputsList.component(dictMonadStore.MonadEffect0()))({
+                                      messageHandler: messageHandler
+                                  })(handleInputsOutput) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex-grow") ])((function () {
+                                      var v4 = Data_Function.flip(Data_Array.index)(v3.value0)(v2.value0);
+                                      if (v4 instanceof Data_Maybe.Just) {
+                                          return [ Halogen_HTML.slot()({
+                                              reflectSymbol: function () {
+                                                  return "truthTableEditPanel";
+                                              }
+                                          })(Data_Ord.ordInt)(truthTableEditPanel_)(v3.value0)(LogicWeb_Components_TruthTableEditPanel.component(dictMonadStore))(v4.value0)(handleTableEditOutput) ];
+                                      };
+                                      if (v4 instanceof Data_Maybe.Nothing) {
+                                          return [  ];
+                                      };
+                                      throw new Error("Failed pattern match at LogicWeb.Components.Pages.TruthTableEditor (line 83, column 34 - line 85, column 22): " + [ v4.constructor.name ]);
+                                  })()) ]));
+                              });
+                          });
                       });
                   });
               });
@@ -13148,7 +13494,6 @@ var PS = {};
   $PS["LogicWeb.Components.Body"] = $PS["LogicWeb.Components.Body"] || {};
   var exports = $PS["LogicWeb.Components.Body"];
   var Data_Eq = $PS["Data.Eq"];
-  var Data_Maybe = $PS["Data.Maybe"];
   var Data_Ord = $PS["Data.Ord"];
   var Data_Unit = $PS["Data.Unit"];
   var Halogen_HTML = $PS["Halogen.HTML"];
@@ -13173,8 +13518,8 @@ var PS = {};
                       var makeMenu = function (iconFont) {
                           return function (p) {
                               return Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("cursor-pointer text-3xl w-14 h-16 flex items-center justify-center " + (function () {
-                                  var $8 = Data_Eq.eq(LogicWeb_Type_Page.eqPage)(p)(v2.value0);
-                                  if ($8) {
+                                  var $7 = Data_Eq.eq(LogicWeb_Type_Page.eqPage)(p)(v2.value0);
+                                  if ($7) {
                                       return "";
                                   };
                                   return "opacity-50";
@@ -13196,19 +13541,9 @@ var PS = {};
                                   reflectSymbol: function () {
                                       return "truthTableEditor";
                                   }
-                              })(Data_Ord.ordUnit)(truthTableEditor_)(Data_Unit.unit)(LogicWeb_Components_Pages_TruthTableEditor.component(dictMonadStore))({
-                                  variables: [ "\u03b1" ],
-                                  output: "output",
-                                  table: function (f) {
-                                      var v3 = f("0");
-                                      if (v3 instanceof Data_Maybe.Just) {
-                                          return new Data_Maybe.Just(true);
-                                      };
-                                      return Data_Maybe.Nothing.value;
-                                  }
-                              });
+                              })(Data_Ord.ordUnit)(truthTableEditor_)(Data_Unit.unit)(LogicWeb_Components_Pages_TruthTableEditor.component(dictMonadStore))(Data_Unit.unit);
                           };
-                          throw new Error("Failed pattern match at LogicWeb.Components.Body (line 45, column 9 - line 53, column 14): " + [ v2.value0.constructor.name ]);
+                          throw new Error("Failed pattern match at LogicWeb.Components.Body (line 45, column 9 - line 47, column 94): " + [ v2.value0.constructor.name ]);
                       })() ]) ]));
                   });
               };
