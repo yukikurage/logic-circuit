@@ -2,6 +2,7 @@ module LogicWeb.Components.Pages.FormulaEditor where
 
 import Prelude
 
+import Data.Array (index)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple.Nested ((/\))
@@ -13,9 +14,9 @@ import Halogen.Hooks as Hooks
 import Halogen.Store.Monad (class MonadStore, getStore, updateStore)
 import Halogen.Store.Select (selectEq)
 import Halogen.Store.UseSelector (useSelector)
-import LogicWeb.Components.InputsList as InputsList
 import LogicWeb.Components.Common (css)
 import LogicWeb.Components.HTML.TruthTable (displayTruthTable)
+import LogicWeb.Components.InputsList as InputsList
 import LogicWeb.PropositionalLogic (toTruthTable)
 import LogicWeb.PropositionalLogic.Formula.Parser (BadRequestValue(..), ParseError(..), parse)
 import LogicWeb.PropositionalLogic.Formula.Primitive (primEnv)
@@ -42,17 +43,20 @@ component = Hooks.component \token _ -> Hooks.do
       Left (BadRequest (DuplicatedToken str)) -> "入力に不整合があります: "<> str
       Left (BadRequest (NoSuchToken str)) -> "トークンが見つかりません: "<> str
       Left (BadRequest EmptyRequest) -> ""
-    handleChangedInputs = case _ of
-      InputsList.Changed _ o -> do
-        case parse primEnv o of
-          Right f -> do Hooks.put truthTableId $ toTruthTable f
-          Left (BadRequest EmptyRequest) -> Hooks.put truthTableId $ emptyTruthTable
-          _ -> Hooks.put truthTableId $ emptyTruthTable
-        saveData
-        save
-      _ -> do
-        saveData
-        save
+    handleChangedInputs _ = do
+      xs <- Hooks.request token.slotToken inputsList_ unit InputsList.GetValues
+      i <- Hooks.request token.slotToken inputsList_ unit InputsList.Focusing
+      let
+        s = fromMaybe "" do
+          xs' <- xs
+          i' <- i
+          index xs' i'
+      case parse primEnv s of
+        Right f -> do Hooks.put truthTableId $ toTruthTable f
+        Left (BadRequest EmptyRequest) -> Hooks.put truthTableId $ emptyTruthTable
+        _ -> Hooks.put truthTableId $ emptyTruthTable
+      saveData
+      save
     saveData = do
       xs <- Hooks.request token.slotToken inputsList_ unit InputsList.GetValues
       lift $ updateStore $ SetFormulas $ fromMaybe [] xs

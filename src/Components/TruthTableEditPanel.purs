@@ -2,11 +2,11 @@ module LogicWeb.Components.TruthTableEditPanel where
 
 import Prelude
 
-import Data.Array (concat, filter, index, length, mapWithIndex, modifyAt, notElem, nub, singleton, zip, zipWith)
+import Data.Array (all, filter, index, length, mapWithIndex, modifyAt, notElem, nub, replicate, singleton)
+import Data.Either (Either(..))
 import Data.Int (pow)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Traversable (sequence, sum)
-import Data.Tuple (snd)
 import Data.Tuple.Nested ((/\))
 import Data.Unfoldable (replicateA)
 import Halogen (Component)
@@ -14,13 +14,15 @@ import Halogen.HTML (HTML)
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.Hooks as Hooks
-import Halogen.Store.Monad (class MonadStore, updateStore)
+import Halogen.Store.Monad (class MonadStore)
 import LogicWeb.Common (showBool)
 import LogicWeb.Components.Common (css)
 import LogicWeb.Components.HTML.TruthTable (displayTruthTable)
 import LogicWeb.Components.InputsList as InputsList
+import LogicWeb.PropositionalLogic.Formula (Formula(..))
+import LogicWeb.PropositionalLogic.Formula.Parser (parse)
+import LogicWeb.PropositionalLogic.Formula.Primitive (primEnv)
 import LogicWeb.PropositionalLogic.TruthTable (TruthTable(..))
-import LogicWeb.Store (Action(..))
 import LogicWeb.Store as Store
 import LogicWeb.Type.RawTruthTable (RawTruthTable)
 import Type.Proxy (Proxy(..))
@@ -49,25 +51,30 @@ component = Hooks.component \{slotToken, outputToken} inputRawTruthTable -> Hook
     messageHandler = case _ of
       "" -> "変数名が空です"
       s | length (filter (_ == s) variables) > 1 -> "変数名が重複しています"
+      s | not $ isValidVariables s -> "不正な値です"
       _ -> ""
 
     -- | 変数を変更したときの処理
-    handleChangeInputs o = do
-      let
-        newResults = case o of
-          InputsList.Add -> concat $ zipWith (\x y -> [x, y]) results results
-          InputsList.Delete i -> map snd
-            $ filter (\(xs /\ _) -> index xs i == Just true)
-            $ zip (replicateA (length variables) [false, true] :: Array _) results
-          _ -> results
-
+    handleChangeInputs _ = do
       res <- fromMaybe [] <$> Hooks.request slotToken inputsList_ unit InputsList.GetValues
+
+      let
+        newResults = if length res == length variables
+          then results
+          else replicate (pow 2 $ length res) false
 
       Hooks.put variablesId $ res
       Hooks.put resultsId $ newResults
       Hooks.raise outputToken $ Change {variables: res, results: newResults, name: inputRawTruthTable.name}
 
-    makeTruthTable | nub variables == variables && notElem "" variables = Just $ TruthTable
+    isValidVariables v = case parse primEnv v of
+      Right (Var _) -> true
+      _ -> false
+    makeTruthTable
+      | nub variables == variables
+      && notElem "" variables
+      && all isValidVariables variables
+      = Just $ TruthTable
       { variables: variables
       , output: ""
       , table: \f -> index results
@@ -80,7 +87,10 @@ component = Hooks.component \{slotToken, outputToken} inputRawTruthTable -> Hook
       <> [ HH.td
           [ css "border-l-4 border-t border-yukiRed h-9 w-9 cursor-pointer"
           , HE.onClick \_ -> do
-            Hooks.put resultsId $ fromMaybe results $ modifyAt i not results
+            let
+              newResults = fromMaybe results $ modifyAt i not results
+            Hooks.put resultsId $ newResults
+            Hooks.raise outputToken $ Change {variables: variables, results: newResults, name: inputRawTruthTable.name}
           ]
           [ divButton $ fromMaybe false $ index results i ]
         ]

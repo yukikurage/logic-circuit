@@ -19,12 +19,12 @@ data Query a = GetValue (String -> a) | SetValue String a
 component :: forall m. MonadEffect m => Component Query
   { messageHandler :: String -> String
   , name :: String
+  , focusing :: Boolean
   }
   Output m
-component = Hooks.component \token {name, messageHandler} -> Hooks.do
+component = Hooks.component \token {name, messageHandler, focusing} -> Hooks.do
   errorMessage /\ errorMessageId <- Hooks.useState ""
   input /\ inputId <- Hooks.useState ""
-  isFocus /\ isFocusId <- Hooks.useState false
 
   Hooks.useLifecycleEffect do
     Hooks.put errorMessageId $ messageHandler input
@@ -40,7 +40,7 @@ component = Hooks.component \token {name, messageHandler} -> Hooks.do
   Hooks.pure $ HH.div [css "flex flex-row items-start w-full border-b-2 border-yukiRed relative"]
     [ HH.div
       [ css $ "text-lg px-2 py rounded-br-lg border-yukiRed "
-        <> if isFocus then "bg-yukiRed text-white" else "bg-white text-yukiBlack"
+        <> if focusing then "bg-yukiRed text-white" else "bg-white text-yukiBlack"
       ]
       [ HH.text $ name ]
     , HH.input
@@ -53,12 +53,9 @@ component = Hooks.component \token {name, messageHandler} -> Hooks.do
         Hooks.put errorMessageId $ messageHandler s
 
       , HE.onFocusIn \_ -> do
-        Hooks.put isFocusId true
         Hooks.put errorMessageId $ messageHandler input
         Hooks.raise token.outputToken $ Changed $ input
         Hooks.raise token.outputToken $ Focus
-
-      , HE.onFocusOut \_ -> Hooks.put isFocusId false
       ]
     , HH.div
       [ css $ "absolute right-0 top-0 bg-transparent rounded-bl-lg border-yukiRed b text-yukiRed hover:bg-yukiRed hover:text-white text-xl cursor-pointer px-2"

@@ -31,7 +31,7 @@ fromString str = do
 
 emptyRawTruthTable :: RawTruthTable
 emptyRawTruthTable =
-  { name: "New Truth Table"
+  { name: "New Table"
   , variables: ["P"]
   , results: [true, false]
   }
