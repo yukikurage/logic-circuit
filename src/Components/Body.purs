@@ -44,12 +44,6 @@ component = Hooks.component \_ _ -> Hooks.do
     , HH.div [css "min-h-screen flex-grow bg-yukiYellow"]
       [ case page of
           FormulaEditor -> HH.slot_ formulaEditor_ unit FormulaEditor.component unit
-          TruthTableEditor -> HH.slot_ truthTableEditor_ unit TruthTableEditor.component $ TruthTable
-            { variables: ["α"]
-            , output: "output"
-            , table: \f -> case f "0" of
-              Just _ -> Just true
-              _ -> Nothing
-            }
+          TruthTableEditor -> HH.slot_ truthTableEditor_ unit TruthTableEditor.component unit
       ]
     ]

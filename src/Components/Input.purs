@@ -12,7 +12,7 @@ import Halogen.HTML.Properties as HP
 import Halogen.Hooks as Hooks
 import LogicWeb.Components.Common (css)
 
-data Output = Changed String | Delete
+data Output = Changed String | Delete | Focus
 
 data Query a = GetValue (String -> a) | SetValue String a
 
@@ -26,10 +26,15 @@ component = Hooks.component \token {name, messageHandler} -> Hooks.do
   input /\ inputId <- Hooks.useState ""
   isFocus /\ isFocusId <- Hooks.useState false
 
+  Hooks.useLifecycleEffect do
+    Hooks.put errorMessageId $ messageHandler input
+    pure $ Nothing
+
   Hooks.useQuery token.queryToken case _ of
     GetValue reply -> pure $ Just $ reply input
     SetValue str a -> do
       Hooks.put inputId str
+      Hooks.put errorMessageId $ messageHandler str
       pure $ Just $ a
 
   Hooks.pure $ HH.div [css "flex flex-row items-start w-full border-b-2 border-yukiRed relative"]
@@ -41,13 +46,18 @@ component = Hooks.component \token {name, messageHandler} -> Hooks.do
     , HH.input
       [ css "font-math text-3xl flex-grow p-4 tracking-widest outline-none w-full"
       , HP.value input
+
       , HE.onValueInput \s -> do
         Hooks.put inputId s
         Hooks.raise token.outputToken $ Changed $ s
         Hooks.put errorMessageId $ messageHandler s
+
       , HE.onFocusIn \_ -> do
         Hooks.put isFocusId true
+        Hooks.put errorMessageId $ messageHandler input
         Hooks.raise token.outputToken $ Changed $ input
+        Hooks.raise token.outputToken $ Focus
+
       , HE.onFocusOut \_ -> Hooks.put isFocusId false
       ]
     , HH.div

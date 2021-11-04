@@ -5,7 +5,6 @@ import Prelude
 import Data.Maybe (fromMaybe)
 import Data.String (Pattern(..), joinWith, split)
 import Data.Traversable (traverse)
-import Debug (spy)
 import Effect.Class (class MonadEffect, liftEffect)
 import Halogen.Store.Monad (class MonadStore, getStore, updateStore)
 import LogicWeb.Type.RawFormula (RawFormula)
@@ -17,7 +16,11 @@ import Web.Storage.Storage (getItem, setItem)
 type Store = {formulas :: Array RawFormula, truthTables :: Array RawTruthTable}
 
 initialStore :: Store
-initialStore = {formulas: [], truthTables: []}
+initialStore =
+  {
+  formulas: ["(¬P&P)=>Q"],
+  truthTables: [{name: "Example", variables: ["P", "Q"], results: [true, false, false, true]}]
+  }
 
 data Action
   = SetFormulas (Array RawFormula)
@@ -44,7 +47,7 @@ load = do
   fs <- liftEffect $ getItem "formulas" s
   ts <- liftEffect $ getItem "truthTables" s
   let
-    formulas = fromMaybe [] $ split (Pattern ";") <$> fs
-    truthTables = fromMaybe [] $ traverse fromString =<< split (Pattern ";") <$> ts
+    formulas = (\x -> if x == [""] then [] else x) $ fromMaybe initialStore.formulas $ split (Pattern ";") <$> fs
+    truthTables = fromMaybe initialStore.truthTables $ traverse fromString =<< split (Pattern ";") <$> ts
   updateStore $ SetFormulas formulas
   updateStore $ SetTruthTables truthTables

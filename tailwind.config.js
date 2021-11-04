@@ -17,7 +17,7 @@ module.exports = {
       },
       keyframes: {
         'fade-in-keyframes': {
-          '0%': {opacity: '0', top: '-2px'},
+          '0%': {opacity: '0', top: '-0px'},
           '100%': {opacity: '1', top: '0px'},
         },
       },

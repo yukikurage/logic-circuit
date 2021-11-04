@@ -18,7 +18,7 @@ import LogicWeb.PropositionalLogic.TruthTable as T
 import LogicWeb.Store (Action(..), save)
 import LogicWeb.Store as Store
 
-displayTruthTable :: forall w m. 
+displayTruthTable :: forall w m.
   Monad m
   => MonadStore Store.Action Store.Store m
   => TruthTable -> HH.HTML w (HookM m Unit)

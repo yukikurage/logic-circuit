@@ -2,12 +2,8 @@ module LogicWeb.Components.Pages.FormulaEditor where
 
 import Prelude
 
-import Data.Array (catMaybes, delete, find, length, mapWithIndex, notElem)
 import Data.Either (Either(..))
-import Data.Foldable (maximum)
-import Data.FoldableWithIndex (forWithIndex_)
-import Data.Maybe (Maybe(..))
-import Data.Traversable (for)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple.Nested ((/\))
 import Effect.Class (class MonadEffect)
 import Halogen (Component, lift)
@@ -17,11 +13,8 @@ import Halogen.Hooks as Hooks
 import Halogen.Store.Monad (class MonadStore, getStore, updateStore)
 import Halogen.Store.Select (selectEq)
 import Halogen.Store.UseSelector (useSelector)
-import LogicWeb.Common (upRange)
+import LogicWeb.Components.InputsList as InputsList
 import LogicWeb.Components.Common (css)
-import LogicWeb.Components.Input (Output(..), Query(..))
-import LogicWeb.Components.Input as FormulaInput
-import LogicWeb.Components.HTML.RootButton (button)
 import LogicWeb.Components.HTML.TruthTable (displayTruthTable)
 import LogicWeb.PropositionalLogic (toTruthTable)
 import LogicWeb.PropositionalLogic.Formula.Parser (BadRequestValue(..), ParseError(..), parse)
@@ -31,7 +24,7 @@ import LogicWeb.Store (Action(..), load, save)
 import LogicWeb.Store as Store
 import Type.Proxy (Proxy(..))
 
-formulaInput_ = Proxy :: Proxy "formulaInput"
+inputsList_ = Proxy :: Proxy "inputsList_"
 
 component :: forall q i o m.
   MonadStore Store.Action Store.Store m
@@ -39,7 +32,6 @@ component :: forall q i o m.
   => Component q i o m
 component = Hooks.component \token _ -> Hooks.do
   truthTable /\ truthTableId <- Hooks.useState emptyTruthTable
-  formulaInputs /\ formulaInputsId <- Hooks.useState []
   formulas <- useSelector $ selectEq _.formulas
 
   let
@@ -50,23 +42,23 @@ component = Hooks.component \token _ -> Hooks.do
       Left (BadRequest (DuplicatedToken str)) -> "入力に不整合があります: "<> str
       Left (BadRequest (NoSuchToken str)) -> "トークンが見つかりません: "<> str
       Left (BadRequest EmptyRequest) -> ""
-    handleChangedFormula id = case _ of
-      FormulaInput.Changed o -> do
+    handleChangedInputs = case _ of
+      InputsList.Changed _ o -> do
         case parse primEnv o of
           Right f -> do Hooks.put truthTableId $ toTruthTable f
           Left (BadRequest EmptyRequest) -> Hooks.put truthTableId $ emptyTruthTable
           _ -> Hooks.put truthTableId $ emptyTruthTable
         saveData
-      Delete -> do
-        Hooks.put formulaInputsId $ delete id formulaInputs
+        save
+      _ -> do
         saveData
+        save
     saveData = do
-      xs <- for formulaInputs \id -> Hooks.request token.slotToken formulaInput_ id GetValue
-      lift $ updateStore $ SetFormulas $ catMaybes xs
+      xs <- Hooks.request token.slotToken inputsList_ unit InputsList.GetValues
+      lift $ updateStore $ SetFormulas $ fromMaybe [] xs
     loadData = do
       xs <- _.formulas <$> getStore
-      Hooks.put formulaInputsId $ upRange 0 $ length xs - 1
-      forWithIndex_ xs \i str -> Hooks.tell token.slotToken formulaInput_ i $ SetValue str
+      Hooks.tell token.slotToken inputsList_ unit $ InputsList.SetValues xs
 
   useLifecycleEffect do
     load
@@ -78,16 +70,8 @@ component = Hooks.component \token _ -> Hooks.do
     pure Nothing
 
   Hooks.pure $ HH.div [css "flex flex-row h-full relative animate-fade-in-quick"] $
-    [ HH.div [css "flex flex-col flex-grow overflow-auto shadow-md relative z-30 bg-white"] $
-      [ HH.div [css "h-12 w-16 m-6"]
-        [ button [HH.i [css "fas fa-plus"] []] \_ -> case (\m -> find (flip notElem formulaInputs) $ upRange 0 $ m + 1) =<< maximum formulaInputs of
-          Just x -> do
-            loadData
-            Hooks.put formulaInputsId $ (formulaInputs <> [x])
-          Nothing -> Hooks.put formulaInputsId $ [0]
-        ]
+    [ HH.div [css "flex-grow h-full bg-white shadow-md relative"] $
+      [ HH.slot inputsList_ unit InputsList.component {messageHandler} handleChangedInputs
       ]
-      <>
-      flip mapWithIndex formulaInputs \i id -> HH.slot formulaInput_ id FormulaInput.component {name: show i, messageHandler} (handleChangedFormula id)
     , HH.div [css "overflow-auto w-auto font-meiryo text-lg flex-col flex items-center p-3"] $ [displayTruthTable truthTable]
     ]
