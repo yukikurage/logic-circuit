@@ -17,6 +17,7 @@ import LogicWeb.PropositionalLogic.TruthTable (TruthTable(..))
 import LogicWeb.PropositionalLogic.TruthTable as T
 import LogicWeb.Store (Action(..), save)
 import LogicWeb.Store as Store
+import LogicWeb.Type.RawTruthTable (fromTruthTable)
 
 displayTruthTable :: forall w m.
   Monad m
@@ -38,6 +39,14 @@ displayTruthTable (TruthTable t) = HH.div [css "shadow-md bg-white relative z-30
       fs <- lift $ (_.formulas <$> getStore)
       case dnf (TruthTable t) of
         Just g -> lift $ updateStore $ SetFormulas $ snoc fs $ show g
+        Nothing -> pure unit
+      save
+    ]
+  , HH.div [css "mt-3"]
+    [ button [HH.text "真理値表として追加"] \_ -> do
+      ts <- lift $ (_.truthTables <$> getStore)
+      case fromTruthTable (TruthTable t) of
+        Just g -> lift $ updateStore $ SetTruthTables $ snoc ts $ g
         Nothing -> pure unit
       save
     ]

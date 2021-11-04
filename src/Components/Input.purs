@@ -39,7 +39,7 @@ component = Hooks.component \token {name, messageHandler, focusing} -> Hooks.do
 
   Hooks.pure $ HH.div [css "flex flex-row items-start w-full border-b-2 border-yukiRed relative"]
     [ HH.div
-      [ css $ "text-lg px-2 py rounded-br-lg border-yukiRed "
+      [ css $ "duration-75 text-lg px-2 py rounded-br-lg border-yukiRed "
         <> if focusing then "bg-yukiRed text-white" else "bg-white text-yukiBlack"
       ]
       [ HH.text $ name ]
