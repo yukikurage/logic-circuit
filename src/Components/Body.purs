@@ -2,21 +2,20 @@ module LogicWeb.Components.Body where
 
 import Prelude
 
-import Data.Maybe (Maybe(..))
 import Data.Tuple.Nested ((/\))
 import Effect.Class (class MonadEffect)
 import Halogen (Component)
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
 import Halogen.Hooks as Hooks
 import Halogen.Store.Monad (class MonadStore)
 import LogicWeb.Components.Common (css)
 import LogicWeb.Components.Pages.FormulaEditor as FormulaEditor
 import LogicWeb.Components.Pages.TruthTableEditor as TruthTableEditor
-import LogicWeb.PropositionalLogic.TruthTable (TruthTable(..))
+import LogicWeb.Store as Store
 import LogicWeb.Type.Page (Page(..))
 import Type.Proxy (Proxy(..))
-import LogicWeb.Store as Store
 
 formulaEditor_ = Proxy :: Proxy "formulaEditor"
 truthTableEditor_ = Proxy :: Proxy "truthTableEditor"
@@ -29,17 +28,21 @@ component = Hooks.component \_ _ -> Hooks.do
   let
     makeMenu iconFont p =
       HH.div
-        [ css $ "cursor-pointer text-3xl w-14 h-16 flex items-center justify-center "
-            <> if p == page then "" else "opacity-50"
+        [ css $ "hover:opacity-70 cursor-pointer text-3xl w-14 h-16 flex items-center justify-center "
+            <> if p == page then "hover:opacity-100" else "opacity-50"
         , HE.onClick \_ -> Hooks.put pageId p
         ]
         [ HH.i [css iconFont][]
         ]
 
   Hooks.pure $ HH.div [css "h-auto flex flex-row text-yukiBlack"]
-    [ HH.div [css "min-h-screen w-16 bg-yukiBlack text-white flex flex-col items-center"]
+    [ HH.div [css "min-h-screen w-16 bg-yukiBlack text-white flex flex-col items-center relative"]
       [ makeMenu "fas fa-align-left" FormulaEditor
       , makeMenu "fas fa-table" TruthTableEditor
+      , HH.div [css "font-math absolute bottom-11 transform -rotate-90 text-lg cursor-pointer"]
+        [ HH.text "Yukiworks"
+        , HH.a [css "absolute bottom-0 top-0 right-0 left-0", HP.href " https://yukikurage.github.io/portfolio/"] []
+        ]
       ]
     , HH.div [css "min-h-screen flex-grow bg-yukiYellow"]
       [ case page of

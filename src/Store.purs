@@ -2,11 +2,12 @@ module LogicWeb.Store where
 
 import Prelude
 
-import Data.Maybe (fromMaybe)
-import Data.String (Pattern(..), joinWith, split)
+import Data.Maybe (Maybe(..), fromMaybe)
+import Data.String (joinWith)
 import Data.Traversable (traverse)
 import Effect.Class (class MonadEffect, liftEffect)
 import Halogen.Store.Monad (class MonadStore, getStore, updateStore)
+import LogicWeb.Common (splitCaseEmpty)
 import LogicWeb.Type.RawFormula (RawFormula)
 import LogicWeb.Type.RawTruthTable (RawTruthTable, fromString, toString)
 import Web.HTML (window)
@@ -47,7 +48,11 @@ load = do
   fs <- liftEffect $ getItem "formulas" s
   ts <- liftEffect $ getItem "truthTables" s
   let
-    formulas = (\x -> if x == [""] then [] else x) $ fromMaybe initialStore.formulas $ split (Pattern ";") <$> fs
-    truthTables = fromMaybe initialStore.truthTables $ traverse fromString =<< split (Pattern ";") <$> ts
+    formulas = case fs of
+      Just fs' -> splitCaseEmpty ";" fs'
+      Nothing -> initialStore.formulas
+    truthTables = case ts of
+      Just ts' -> fromMaybe [] $ traverse fromString $ splitCaseEmpty ";" ts'
+      Nothing -> initialStore.truthTables
   updateStore $ SetFormulas formulas
   updateStore $ SetTruthTables truthTables
