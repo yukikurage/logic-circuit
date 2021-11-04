@@ -990,6 +990,10 @@ video {
   filter: var(--tw-filter);
 }
 
+.duration-75 {
+  transition-duration: 75ms;
+}
+
 .hover\:bg-yukiRed:hover {
   --tw-bg-opacity: 1;
   background-color: rgba(168, 35, 62, var(--tw-bg-opacity));
