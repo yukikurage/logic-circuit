@@ -11961,7 +11961,7 @@ var PS = {};
   var LogicWeb_Components_Common = $PS["LogicWeb.Components.Common"];                
   var button = function (content) {
       return function (eventHandler) {
-          return Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("text-yukiRed bg-white border-yukiRed border-2 text-lg rounded-md p-2 flex items-center justify-center cursor-pointer hover:bg-yukiRed hover:text-white duration-75"), Halogen_HTML_Events.onClick(eventHandler) ])(content);
+          return Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("text-yukiRed bg-white border-yukiRed border-2 text-lg rounded-md p-2\x0a    flex items-center justify-center cursor-pointer hover:bg-yukiRed\x0a    hover:text-white duration-75"), Halogen_HTML_Events.onClick(eventHandler) ])(content);
       };
   };
   exports["button"] = button;
