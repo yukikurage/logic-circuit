@@ -2,8 +2,8 @@ module LogicWeb.Common where
 
 import Prelude
 
-import Data.Array (range)
-import Data.Maybe (Maybe(..))
+import Data.Array (init, range)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String (Pattern(..), split)
 
 upRange :: Int -> Int -> Array Int
@@ -20,5 +20,4 @@ readBool = case _ of
 
 splitCaseEmpty :: String -> String -> Array String
 splitCaseEmpty p = case _ of
-  "" -> []
-  s -> split (Pattern p) s
+  s -> fromMaybe [] $ init $ split (Pattern p) s

@@ -2,8 +2,8 @@ module LogicWeb.Store where
 
 import Prelude
 
+import Data.Array (fold)
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.String (joinWith)
 import Data.Traversable (traverse)
 import Effect.Class (class MonadEffect, liftEffect)
 import Halogen.Store.Monad (class MonadStore, getStore, updateStore)
@@ -37,10 +37,10 @@ save = do
   s <- liftEffect $ localStorage =<< window
 
   formulas <- _.formulas <$> getStore
-  liftEffect $ setItem "formulas" (joinWith ";" formulas) s
+  liftEffect $ setItem "formulas" (fold $ map (_ <> ";") formulas) s
 
   truthTables <- _.truthTables <$> getStore
-  liftEffect $ setItem "truthTables" (joinWith ";" $ map toString truthTables) s
+  liftEffect $ setItem "truthTables" (fold $ map (_ <> ";") $ map toString truthTables) s
 
 load :: forall m action. MonadEffect m => MonadStore Action action m => m Unit
 load = do
