@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "@tailwindcss/jit": "^0.1.10",
+    "@tailwindcss/jit": "0.1.10",
     "tailwindcss": "^2.2.16",
     "webpack": "^5.58.1",
     "webpack-cli": "^4.9.0",
