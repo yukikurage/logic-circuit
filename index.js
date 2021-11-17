@@ -13843,7 +13843,7 @@ var PS = {};
                               }) ])([ Halogen_HTML_Elements.i([ LogicWeb_Components_Common.css(iconFont) ])([  ]) ]);
                           };
                       };
-                      return Halogen_Hooks_Hook.pure(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-auto flex flex-row text-yukiBlack") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("min-h-screen w-16 bg-yukiBlack text-white flex flex-col items-center relative") ])([ makeMenu("fas fa-align-left")(LogicWeb_Type_Page.FormulaEditor.value), makeMenu("fas fa-table")(LogicWeb_Type_Page.TruthTableEditor.value), makeMenu("fas fa-arrows-alt-h")(LogicWeb_Type_Page.SymbolsEditor.value), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("font-math absolute bottom-11 transform -rotate-90 text-lg cursor-pointer") ])([ Halogen_HTML_Core.text("Yukiworks"), Halogen_HTML_Elements.a([ LogicWeb_Components_Common.css("absolute bottom-0 top-0 right-0 left-0"), Halogen_HTML_Properties.href(" https://yukikurage.github.io/portfolio/") ])([  ]) ]) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("min-h-screen h-auto w-full flex-col flex-grow flex") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-auto bg-yukiRed text-white p-2 font-meiryo") ])([ Halogen_HTML_Core.text((function () {
+                      return Halogen_Hooks_Hook.pure(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-auto flex flex-row text-yukiBlack") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("min-h-screen w-16 relative") ])([  ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("w-16 bg-yukiBlack text-white flex flex-col items-center fixed left-0 top-0 bottom-0") ])([ makeMenu("fas fa-align-left")(LogicWeb_Type_Page.FormulaEditor.value), makeMenu("fas fa-table")(LogicWeb_Type_Page.TruthTableEditor.value), makeMenu("fas fa-arrows-alt-h")(LogicWeb_Type_Page.SymbolsEditor.value), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("font-math absolute bottom-11 transform -rotate-90 text-lg cursor-pointer hover:opacity-70 opacity-50") ])([ Halogen_HTML_Core.text("Yukiworks"), Halogen_HTML_Elements.a([ LogicWeb_Components_Common.css("absolute bottom-0 top-0 right-0 left-0"), Halogen_HTML_Properties.href(" https://yukikurage.github.io/portfolio/") ])([  ]) ]) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("min-h-screen h-auto w-full flex-col flex-grow flex") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-auto bg-yukiRed text-white p-2 font-meiryo") ])([ Halogen_HTML_Core.text((function () {
                           if (v2.value0 instanceof LogicWeb_Type_Page.FormulaEditor) {
                               return "\u8ad6\u7406\u5f0f\u30a8\u30c7\u30a3\u30bf";
                           };
@@ -13853,7 +13853,7 @@ var PS = {};
                           if (v2.value0 instanceof LogicWeb_Type_Page.SymbolsEditor) {
                               return "\u6f14\u7b97\u5b50\u4e00\u89a7";
                           };
-                          throw new Error("Failed pattern match at LogicWeb.Components.Body (line 52, column 19 - line 55, column 35): " + [ v2.value0.constructor.name ]);
+                          throw new Error("Failed pattern match at LogicWeb.Components.Body (line 53, column 19 - line 56, column 35): " + [ v2.value0.constructor.name ]);
                       })()) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-auto flex-grow bg-yukiYellow") ])([ (function () {
                           if (v2.value0 instanceof LogicWeb_Type_Page.FormulaEditor) {
                               return Halogen_HTML.slot_()({
@@ -13876,7 +13876,7 @@ var PS = {};
                                   }
                               })(Data_Ord.ordUnit)(symbolsEditor_)(Data_Unit.unit)(LogicWeb_Components_Pages_SymbolsEditor.component(dictMonadEffect.Monad0())(dictMonadStore))(Data_Unit.unit);
                           };
-                          throw new Error("Failed pattern match at LogicWeb.Components.Body (line 58, column 11 - line 61, column 87): " + [ v2.value0.constructor.name ]);
+                          throw new Error("Failed pattern match at LogicWeb.Components.Body (line 59, column 11 - line 62, column 87): " + [ v2.value0.constructor.name ]);
                       })() ]) ]) ]));
                   });
               };
