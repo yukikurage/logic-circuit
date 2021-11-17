@@ -35,10 +35,10 @@ component = Hooks.component \{outputToken, queryToken, slotToken} {messageHandle
     getValues xs = fromMaybe [] <<< sequence <$> (for xs \id -> Hooks.request slotToken input_ id Input.GetValue)
 
     handleChangedInput i = case _ of
-      Input.Changed o -> do
+      Input.Changed o | not isReadOnly -> do
         Hooks.raise outputToken $ Changed i o
 
-      Input.Delete -> do
+      Input.Delete | not isReadOnly -> do
         let
           newInputs = fromMaybe inputs $ deleteAt i inputs
         Hooks.put inputsId newInputs
@@ -50,6 +50,8 @@ component = Hooks.component \{outputToken, queryToken, slotToken} {messageHandle
       Input.Focus -> do
         Hooks.put focusingId $ Just i
         Hooks.raise outputToken $ Focus $ Just i
+
+      _ -> pure unit
 
     handleAddButton _ = do
       let
@@ -75,7 +77,7 @@ component = Hooks.component \{outputToken, queryToken, slotToken} {messageHandle
       ( flip mapWithIndex inputs \i id ->
         HH.slot input_ id Input.component {name: show i, messageHandler, focusing: focusing == Just i, isReadOnly} $ handleChangedInput i
       )
-      <>
+      <> if isReadOnly then [] else
       [ HH.div [css "h-12 w-16 m-3"]
         [ button [HH.i [css "fas fa-plus"] []] handleAddButton
         ]

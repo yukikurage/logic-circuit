@@ -38,7 +38,7 @@ component = Hooks.component \token {name, messageHandler, focusing, isReadOnly} 
       Hooks.put errorMessageId $ messageHandler str
       pure $ Just $ a
 
-  Hooks.pure $ HH.div [css "flex flex-row items-start w-full border-b-2 border-yukiRed relative"]
+  Hooks.pure $ HH.div [css "flex flex-row items-start w-full border-b-2 border-yukiRed relative"] $
     [ HH.div
       [ css $ "duration-75 text-lg px-2 py rounded-br-lg border-yukiRed "
         <> if focusing then "bg-yukiRed text-white" else "bg-white text-yukiBlack"
@@ -59,12 +59,16 @@ component = Hooks.component \token {name, messageHandler, focusing, isReadOnly} 
         Hooks.raise token.outputToken $ Changed $ input
         Hooks.raise token.outputToken $ Focus
       ]
-    , HH.div
+    ]
+    <> if isReadOnly then [] else
+    [ HH.div
       [ css $ "absolute right-0 top-0 bg-transparent rounded-bl-lg border-yukiRed b text-yukiRed hover:bg-yukiRed hover:text-white text-xl cursor-pointer px-2"
       , HE.onClick \_ -> Hooks.raise token.outputToken Delete
       ]
       [ HH.i [css "fas fa-times"][]]
-    , HH.div [css $ "absolute right-1 bottom-1 rounded-md text-base bg-yukiBlack text-white px-2 py-1 bg-opacity-50 "
+    ]
+    <>
+    [ HH.div [css $ "absolute right-1 bottom-1 rounded-md text-base bg-yukiBlack text-white px-2 py-1 bg-opacity-50 "
         <> if errorMessage == "" then "invisible" else "visible"]
       [ HH.text errorMessage
       ]
