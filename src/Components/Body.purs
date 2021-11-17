@@ -38,11 +38,12 @@ component = Hooks.component \_ _ -> Hooks.do
         ]
 
   Hooks.pure $ HH.div [css "h-auto flex flex-row text-yukiBlack"]
-    [ HH.div [css "min-h-screen w-16 bg-yukiBlack text-white flex flex-col items-center relative"]
+    [ HH.div [css "min-h-screen w-16 relative"] []
+    , HH.div [css "w-16 bg-yukiBlack text-white flex flex-col items-center fixed left-0 top-0 bottom-0"]
       [ makeMenu "fas fa-align-left" FormulaEditor
       , makeMenu "fas fa-table" TruthTableEditor
       , makeMenu "fas fa-arrows-alt-h" SymbolsEditor
-      , HH.div [css "font-math absolute bottom-11 transform -rotate-90 text-lg cursor-pointer"]
+      , HH.div [css "font-math absolute bottom-11 transform -rotate-90 text-lg cursor-pointer hover:opacity-70 opacity-50"]
         [ HH.text "Yukiworks"
         , HH.a [css "absolute bottom-0 top-0 right-0 left-0", HP.href " https://yukikurage.github.io/portfolio/"] []
         ]
