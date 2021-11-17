@@ -12507,6 +12507,7 @@ var PS = {};
   var Control_Applicative = $PS["Control.Applicative"];
   var Control_Bind = $PS["Control.Bind"];
   var Data_Maybe = $PS["Data.Maybe"];
+  var Data_Semigroup = $PS["Data.Semigroup"];
   var Halogen_HTML_Core = $PS["Halogen.HTML.Core"];
   var Halogen_HTML_Elements = $PS["Halogen.HTML.Elements"];
   var Halogen_HTML_Events = $PS["Halogen.HTML.Events"];
@@ -12581,7 +12582,7 @@ var PS = {};
                               };
                               throw new Error("Failed pattern match at LogicWeb.Components.Input (line 34, column 35 - line 39, column 22): " + [ v3.constructor.name ]);
                           }))(function () {
-                              return Halogen_Hooks_Hook.pure(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-row items-start w-full border-b-2 border-yukiRed relative") ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("duration-75 text-lg px-2 py rounded-br-lg border-yukiRed " + (function () {
+                              return Halogen_Hooks_Hook.pure(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-row items-start w-full border-b-2 border-yukiRed relative") ])(Data_Semigroup.append(Data_Semigroup.semigroupArray)([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("duration-75 text-lg px-2 py rounded-br-lg border-yukiRed " + (function () {
                                   if (v.focusing) {
                                       return "bg-yukiRed text-white";
                                   };
@@ -12598,15 +12599,20 @@ var PS = {};
                                           return Halogen_Hooks_HookM.raise(token.outputToken)(Focus.value);
                                       });
                                   });
-                              }) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("absolute right-0 top-0 bg-transparent rounded-bl-lg border-yukiRed b text-yukiRed hover:bg-yukiRed hover:text-white text-xl cursor-pointer px-2"), Halogen_HTML_Events.onClick(function (v3) {
-                                  return Halogen_Hooks_HookM.raise(token.outputToken)(Delete.value);
-                              }) ])([ Halogen_HTML_Elements.i([ LogicWeb_Components_Common.css("fas fa-times") ])([  ]) ]), Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("absolute right-1 bottom-1 rounded-md text-base bg-yukiBlack text-white px-2 py-1 bg-opacity-50 " + (function () {
-                                  var $15 = v1.value0 === "";
-                                  if ($15) {
-                                      return "invisible";
+                              }) ]) ])((function () {
+                                  if (v.isReadOnly) {
+                                      return [  ];
                                   };
-                                  return "visible";
-                              })()) ])([ Halogen_HTML_Core.text(v1.value0) ]) ]));
+                                  return Data_Semigroup.append(Data_Semigroup.semigroupArray)([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("absolute right-0 top-0 bg-transparent rounded-bl-lg border-yukiRed b text-yukiRed hover:bg-yukiRed hover:text-white text-xl cursor-pointer px-2"), Halogen_HTML_Events.onClick(function (v3) {
+                                      return Halogen_Hooks_HookM.raise(token.outputToken)(Delete.value);
+                                  }) ])([ Halogen_HTML_Elements.i([ LogicWeb_Components_Common.css("fas fa-times") ])([  ]) ]) ])([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("absolute right-1 bottom-1 rounded-md text-base bg-yukiBlack text-white px-2 py-1 bg-opacity-50 " + (function () {
+                                      var $16 = v1.value0 === "";
+                                      if ($16) {
+                                          return "invisible";
+                                      };
+                                      return "visible";
+                                  })()) ])([ Halogen_HTML_Core.text(v1.value0) ]) ]);
+                              })())));
                           });
                       });
                   });
@@ -12639,6 +12645,7 @@ var PS = {};
   var Data_Semigroup = $PS["Data.Semigroup"];
   var Data_Show = $PS["Data.Show"];
   var Data_Traversable = $PS["Data.Traversable"];
+  var Data_Unit = $PS["Data.Unit"];
   var Halogen_HTML = $PS["Halogen.HTML"];
   var Halogen_HTML_Elements = $PS["Halogen.HTML.Elements"];
   var Halogen_Hooks = $PS["Halogen.Hooks"];
@@ -12725,10 +12732,10 @@ var PS = {};
                   return Halogen_Hooks_Hook.bind(Halogen_Hooks.useState(Data_Maybe.Nothing.value))(function (v3) {
                       var handleChangedInput = function (i) {
                           return function (v4) {
-                              if (v4 instanceof LogicWeb_Components_Input.Changed) {
+                              if (v4 instanceof LogicWeb_Components_Input.Changed && !v1.isReadOnly) {
                                   return Halogen_Hooks_HookM.raise(v.outputToken)(new Changed(i, v4.value0));
                               };
-                              if (v4 instanceof LogicWeb_Components_Input.Delete) {
+                              if (v4 instanceof LogicWeb_Components_Input.Delete && !v1.isReadOnly) {
                                   var newInputs = Data_Maybe.fromMaybe(v2.value0)(Data_Array.deleteAt(i)(v2.value0));
                                   return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(newInputs))(function () {
                                       return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.raise(v.outputToken)(new Delete(i)))(function () {
@@ -12743,7 +12750,7 @@ var PS = {};
                                       return Halogen_Hooks_HookM.raise(v.outputToken)(Focus.create(new Data_Maybe.Just(i)));
                                   });
                               };
-                              throw new Error("Failed pattern match at LogicWeb.Components.InputsList (line 37, column 28 - line 52, column 49): " + [ v4.constructor.name ]);
+                              return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Unit.unit);
                           };
                       };
                       var handleAddButton = function (v4) {
@@ -12757,7 +12764,7 @@ var PS = {};
                               if (v5 instanceof Data_Maybe.Nothing) {
                                   return [ 0 ];
                               };
-                              throw new Error("Failed pattern match at LogicWeb.Components.InputsList (line 56, column 21 - line 58, column 25): " + [ v5.constructor.name ]);
+                              throw new Error("Failed pattern match at LogicWeb.Components.InputsList (line 58, column 21 - line 60, column 25): " + [ v5.constructor.name ]);
                           })();
                           return Control_Bind.discard(Control_Bind.discardUnit)(Halogen_Hooks_HookM.bindHookM)(Halogen_Hooks_HookM.put(v2.value1)(newInputs))(function () {
                               return Halogen_Hooks_HookM.raise(v.outputToken)(Add.value);
@@ -12765,10 +12772,10 @@ var PS = {};
                       };
                       var getValues = function (xs) {
                           return Data_Functor.map(Halogen_Hooks_HookM.functorHookM)((function () {
-                              var $31 = Data_Maybe.fromMaybe([  ]);
-                              var $32 = Data_Traversable.sequence(Data_Traversable.traversableArray)(Data_Maybe.applicativeMaybe);
-                              return function ($33) {
-                                  return $31($32($33));
+                              var $32 = Data_Maybe.fromMaybe([  ]);
+                              var $33 = Data_Traversable.sequence(Data_Traversable.traversableArray)(Data_Maybe.applicativeMaybe);
+                              return function ($34) {
+                                  return $32($33($34));
                               };
                           })())(Data_Traversable["for"](Halogen_Hooks_HookM.applicativeHookM)(Data_Traversable.traversableArray)(xs)(function (id) {
                               return Halogen_Hooks_HookM.request()({
@@ -12802,7 +12809,7 @@ var PS = {};
                           if (v4 instanceof Focusing) {
                               return Control_Applicative.pure(Halogen_Hooks_HookM.applicativeHookM)(Data_Functor.map(Data_Maybe.functorMaybe)(v4.value0)(v3.value0));
                           };
-                          throw new Error("Failed pattern match at LogicWeb.Components.InputsList (line 62, column 29 - line 71, column 32): " + [ v4.constructor.name ]);
+                          throw new Error("Failed pattern match at LogicWeb.Components.InputsList (line 64, column 29 - line 73, column 32): " + [ v4.constructor.name ]);
                       }))(function () {
                           return Halogen_Hooks_Hook.pure(Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("flex flex-col overflow-auto relative") ])(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Function.flip(Data_Array.mapWithIndex)(v2.value0)(function (i) {
                               return function (id) {
@@ -12817,7 +12824,12 @@ var PS = {};
                                       isReadOnly: v1.isReadOnly
                                   })(handleChangedInput(i));
                               };
-                          }))([ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-12 w-16 m-3") ])([ LogicWeb_Components_HTML_RootButton.button([ Halogen_HTML_Elements.i([ LogicWeb_Components_Common.css("fas fa-plus") ])([  ]) ])(handleAddButton) ]) ])));
+                          }))((function () {
+                              if (v1.isReadOnly) {
+                                  return [  ];
+                              };
+                              return [ Halogen_HTML_Elements.div([ LogicWeb_Components_Common.css("h-12 w-16 m-3") ])([ LogicWeb_Components_HTML_RootButton.button([ Halogen_HTML_Elements.i([ LogicWeb_Components_Common.css("fas fa-plus") ])([  ]) ])(handleAddButton) ]) ];
+                          })())));
                       });
                   });
               });
