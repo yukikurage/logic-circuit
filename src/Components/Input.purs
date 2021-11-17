@@ -20,9 +20,10 @@ component :: forall m. MonadEffect m => Component Query
   { messageHandler :: String -> String
   , name :: String
   , focusing :: Boolean
+  , isReadOnly :: Boolean
   }
   Output m
-component = Hooks.component \token {name, messageHandler, focusing} -> Hooks.do
+component = Hooks.component \token {name, messageHandler, focusing, isReadOnly} -> Hooks.do
   errorMessage /\ errorMessageId <- Hooks.useState ""
   input /\ inputId <- Hooks.useState ""
 
@@ -45,6 +46,7 @@ component = Hooks.component \token {name, messageHandler, focusing} -> Hooks.do
       [ HH.text $ name ]
     , HH.input
       [ css "font-math text-3xl flex-grow p-4 tracking-widest outline-none w-full"
+      , HP.readOnly isReadOnly
       , HP.value input
 
       , HE.onValueInput \s -> do

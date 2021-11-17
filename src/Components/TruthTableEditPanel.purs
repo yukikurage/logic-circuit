@@ -102,7 +102,7 @@ component = Hooks.component \{slotToken, outputToken} inputRawTruthTable -> Hook
           [ HH.div [css "rounded-md bg-white shadow-md text-center text-lg w-72"] $
             [
               HH.div [css "m-3"] [HH.text "変数"]
-            , HH.slot inputsList_ unit InputsList.component {messageHandler} handleChangeInputs
+            , HH.slot inputsList_ unit InputsList.component {messageHandler, isReadOnly: false} handleChangeInputs
             ]
           ]
         , HH.div [css "shadow-md bg-white relative z-30 p-3 rounded-md flex flex-col items-center ml-3"]

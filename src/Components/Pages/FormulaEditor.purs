@@ -75,7 +75,7 @@ component = Hooks.component \token _ -> Hooks.do
 
   Hooks.pure $ HH.div [css "flex flex-row h-full relative animate-fade-in-quick"] $
     [ HH.div [css "duration-75 flex-grow h-full bg-white shadow-md relative"] $
-      [ HH.slot inputsList_ unit InputsList.component {messageHandler} handleChangedInputs
+      [ HH.slot inputsList_ unit InputsList.component {messageHandler, isReadOnly : false} handleChangedInputs
       ]
     , HH.div [css "overflow-auto w-auto font-meiryo text-lg flex-col flex items-center p-3"] $ [displayTruthTable truthTable]
     ]

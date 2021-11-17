@@ -68,7 +68,7 @@ component = Hooks.component \{slotToken} _ -> Hooks.do
 
   Hooks.pure $ HH.div [css "h-full flex flex-row relative animate-fade-in-quick"] $
     [ HH.div [css "h-full bg-white shadow-md relative w-[480px]"] $
-      [ HH.slot inputsList_ unit InputsList.component {messageHandler} handleInputsOutput
+      [ HH.slot inputsList_ unit InputsList.component {messageHandler, isReadOnly: false} handleInputsOutput
       ]
     , HH.div [css "flex-grow"] $ case index rawTruthTables =<< selectedTable of
         Just t -> [ HH.slot truthTableEditPanel_ selectedTable TruthTableEditPanel.component t handleTableEditOutput]

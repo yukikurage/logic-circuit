@@ -26,8 +26,8 @@ data Query a = GetValues (Array String -> a) | SetValues (Array String) a | Focu
 
 component :: forall m.
   MonadEffect m =>
-  Component Query {messageHandler :: String -> String} Output m
-component = Hooks.component \{outputToken, queryToken, slotToken} {messageHandler} -> Hooks.do
+  Component Query {messageHandler :: String -> String, isReadOnly :: Boolean} Output m
+component = Hooks.component \{outputToken, queryToken, slotToken} {messageHandler, isReadOnly} -> Hooks.do
   inputs /\ inputsId <- Hooks.useState []
   focusing /\ focusingId <- Hooks.useState $ Nothing
 
@@ -73,7 +73,7 @@ component = Hooks.component \{outputToken, queryToken, slotToken} {messageHandle
   Hooks.pure $
     HH.div [css "flex flex-col overflow-auto relative"] $
       ( flip mapWithIndex inputs \i id ->
-        HH.slot input_ id Input.component {name: show i, messageHandler, focusing: focusing == Just i} $ handleChangedInput i
+        HH.slot input_ id Input.component {name: show i, messageHandler, focusing: focusing == Just i, isReadOnly} $ handleChangedInput i
       )
       <>
       [ HH.div [css "h-12 w-16 m-3"]
